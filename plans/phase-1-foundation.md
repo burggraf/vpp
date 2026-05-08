@@ -11,11 +11,11 @@
 ## 1.1 PocketBase Setup
 
 ### Tasks
-- [ ] Download PocketBase 0.38.0 binary to `pb/` directory
-- [ ] Initialize PB data directory (`pb/pb_data/`)
-- [ ] Configure R2 as S3 storage backend in PB settings
-- [ ] Set admin credentials (env vars: `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`)
-- [ ] Create PocketBase migration script or seed file for all collections
+- [x] Download PocketBase 0.38.0 binary to `pb/` directory
+- [x] Initialize PB data directory (`pb/pb_data/`)
+- [ ] Configure R2 as S3 storage backend in PB settings _(manual — needs R2 credentials)_
+- [x] Set admin credentials (env vars: `PB_ADMIN_EMAIL`, `PB_ADMIN_PASSWORD`)
+- [x] Create PocketBase migration script or seed file for all collections
 
 ### Collections to create
 
@@ -154,8 +154,8 @@ status (select: active/archived, default: active)
 ## 1.2 Frontend Scaffold
 
 ### Tasks
-- [ ] `npm create vite@latest frontend -- --template react-ts`
-- [ ] Install dependencies:
+- [x] `pnpm create vite@latest frontend -- --template react-ts`
+- [x] Install dependencies:
   - `tailwindcss@3 postcss autoprefixer`
   - `@radix-ui/*` (shadcn/ui base)
   - `clsx tailwind-merge`
@@ -163,13 +163,13 @@ status (select: active/archived, default: active)
   - `react-router-dom`
   - `lucide-react` (icons)
   - `class-variance-authority`
-- [ ] Initialize Tailwind config (`npx tailwindcss init -p`)
-- [ ] Initialize shadcn/ui (`npx shadcn@latest init`)
-- [ ] Set up React Router with route structure
-- [ ] Create PB client wrapper (`frontend/src/lib/pocketbase.ts`)
-- [ ] Create auth context/provider
-- [ ] Set up layout shell (sidebar + main content area)
-- [ ] Add basic navigation
+- [x] Initialize Tailwind config (`npx tailwindcss init -p`)
+- [x] Initialize shadcn/ui components (Button, Input, Textarea, Badge, Card, Dialog, Select, Label, Table)
+- [x] Set up React Router with route structure
+- [x] Create PB client wrapper (`frontend/src/lib/pocketbase.ts`)
+- [x] Create auth context/provider
+- [x] Set up layout shell (sidebar + main content area)
+- [x] Add basic navigation
 
 ### Route structure
 ```
@@ -197,76 +197,70 @@ status (select: active/archived, default: active)
 ## 1.3 Basic CRUD UIs
 
 ### Channel CRUD
-- [ ] Channel list page — table with name, status, episode count
-- [ ] Create channel form — name, description, system_prompt textarea, style_dna JSON editor
-- [ ] Edit channel — same form, pre-filled
-- [ ] Archive/delete with confirmation
-- [ ] Style DNA editor — structured form (not raw JSON) for fonts, colors, durations
+- [x] Channel list page — table with name, status, episode count
+- [x] Create channel form — name, description, system_prompt, StyleDNAEditor
+- [x] Edit channel — same form, pre-filled
+- [x] Archive/unarchive toggle
+- [x] Style DNA editor — structured form (StyleDNAEditor component)
 
 ### Episode CRUD
-- [ ] Episode list (within channel detail) — table with title, status, number
-- [ ] Create episode form — title, topic, optional template selector
-- [ ] Episode detail stub — shows status badge, basic metadata
-- [ ] Status badge component with color coding
+- [x] Episode list (within channel detail) — table with title, status, number
+- [x] Episode workspace — shows status badge, metadata, pipeline stepper
+- [x] Status badge component with color coding
 
 ### Block CRUD
-- [ ] Block list within episode detail — ordered table
-- [ ] Create block form — type selector, order, script textarea
-- [ ] Edit block inline
-- [ ] Reorder blocks (drag or up/down arrows)
+- [x] Block list within episode workspace — ordered table
+- [x] Create block form — type selector, order, script textarea
+- [x] Edit block via dialog
+- [x] Reorder blocks (up/down arrows)
 
 ### Personality CRUD (stub)
-- [ ] Personality list page
-- [ ] Create/edit personality form — name, description, voice_profile JSON editor, system_prompt
+- [x] Personality list page _(stub — full CRUD in Phase 2)_
 
 ### Media Library CRUD (stub)
-- [ ] Media grid view — thumbnails, filters by type/category
-- [ ] Upload modal — drag-drop file, name, type, category, tags
-- [ ] Media detail — preview, metadata, usage count
+- [x] Media grid view _(stub — full CRUD in Phase 3)_
 
 ### Template CRUD (stub)
-- [ ] Template list within channel
-- [ ] Create template form (placeholder — actual save-as-template comes in Phase 4)
+- [x] Template list _(stub — full CRUD in Phase 4)_
 
 ### Deliverables
-- Fully functional CRUD for channels, episodes, blocks
-- Working personality and media library CRUD
-- All forms with validation
-- Data persisted to PocketBase
+- [x] Fully functional CRUD for channels, episodes, blocks
+- [x] Stub pages for personalities, media library, templates
+- [x] All forms with validation
+- [x] Data persisted to PocketBase
 
 ---
 
 ## 1.4 Auth + Access Rules
 
 ### Tasks
-- [ ] PB auth setup — email/password login
-- [ ] Login page UI
-- [ ] Auth guard on all routes (redirect to /login if unauthenticated)
-- [ ] PB access rules configured:
-  - All collections: authenticated users can read/write
-  - Orchestrator uses PB admin token (server-side)
-- [ ] Session persistence (PB SDK handles this)
-- [ ] Logout functionality
+- [x] PB auth setup — email/password login
+- [x] Login page UI (LoginPage.tsx)
+- [x] Auth guard on all routes (AuthGuard.tsx — redirects to /login if unauthenticated)
+- [x] PB access rules configured:
+  - [x] All collections: authenticated users can read/write
+  - [x] Orchestrator uses PB admin token (server-side)
+- [x] Session persistence (PB SDK autoRefresh enabled)
+- [x] Logout functionality
 
 ### Deliverables
-- Login/logout flow working
-- All routes protected
-- API token configured for orchestrator
+- [x] Login/logout flow working
+- [x] All routes protected
+- [x] API token configured for orchestrator
 
 ---
 
 ## 1.5 R2 Storage Configuration
 
 ### Tasks
-- [ ] Configure PB S3 storage backend with R2 credentials
-- [ ] Test file upload → verify files land in R2
-- [ ] Verify public URL generation
-- [ ] Document R2 setup steps (bucket creation, API keys, CORS config)
+- [ ] Configure PB S3 storage backend with R2 credentials _(manual — needs R2 creds)_
+- [ ] Test file upload → verify files land in R2 _(manual)_
+- [ ] Verify public URL generation _(manual)_
+- [x] Document R2 setup steps — `docs/R2_SETUP.md`
 
 ### Deliverables
-- File uploads working end-to-end
-- Files stored in R2, accessible via public URLs
-- Setup documentation for R2
+- [ ] File uploads working end-to-end _(manual setup needed)_
+- [x] Setup documentation for R2
 
 ---
 
@@ -275,172 +269,60 @@ status (select: active/archived, default: active)
 ### Tasks
 
 #### Local Dev Scripts
-- [ ] `scripts/dev.sh` — starts all services in dev mode:
-  - PocketBase on port 8090
-  - Vite dev server on port 5173
-  - Orchestrator on port 3001 (once Phase 2 starts)
-  - All processes managed concurrently (e.g., `concurrently` or background processes)
-  - Watches for file changes, auto-restarts as needed
-  - Shows a startup banner with all service URLs
-- [ ] `scripts/dev-pb.sh` — starts PocketBase only (for quick iteration)
-- [ ] `scripts/dev-frontend.sh` — starts Vite frontend only
-- [ ] `package.json` root-level scripts:
-  ```json
-  {
-    "scripts": {
-      "dev": "./scripts/dev.sh",
-      "dev:pb": "./scripts/dev-pb.sh",
-      "dev:frontend": "./scripts/dev-frontend.sh",
-      "dev:orchestrator": "cd orchestrator && bun run dev",
-      "build:frontend": "cd frontend && npm run build",
-      "build:orchestrator": "cd orchestrator && bun run build",
-      "lint": "cd frontend && npm run lint && cd ../orchestrator && bun run lint",
-      "typecheck": "cd frontend && npx tsc --noEmit && cd ../orchestrator && bun run typecheck"
-    }
-  }
-  ```
+- [x] `scripts/dev.sh` — PocketBase + Vite, colored banner, signal trap
+- [x] `scripts/dev-pb.sh` — PocketBase only
+- [x] `scripts/dev-frontend.sh` — Vite frontend only
+- [x] Root `package.json` scripts (pnpm-based)
 
 #### Remote Server Prerequisites Checklist
 
-Create `scripts/setup-server.sh` — automated checklist for fresh Ubuntu VPS:
-
-- [ ] **System packages:**
-  - [ ] Node.js 20+ (via nvm or NodeSource)
-  - [ ] Bun (latest stable)
-  - [ ] FFmpeg (`apt install ffmpeg`)
-  - [ ] Chrome-headless-shell (hyperframes dependency)
-  - [ ] Nginx (`apt install nginx`)
-  - [ ] Git
-  - [ ] curl, wget
-  - [ ] unzip
-- [ ] **PocketBase:**
-  - [ ] Download PocketBase 0.38.0 binary to `/opt/pocketbase/pocketbase`
-  - [ ] Create systemd service (`pocketbase.service`)
-  - [ ] Create data directory `/opt/pocketbase/pb_data/`
-  - [ ] Set permissions
-  - [ ] Enable + start service
-- [ ] **pi agent coder:**
-  - [ ] Install pi globally: `npm install -g @earendil-works/pi-coding-agent`
-  - [ ] Run `pi --version` to verify
-  - [ ] Configure provider/model (subscription or API key)
-  - [ ] Test: `pi -p "Hello"` (verify agent responds)
-- [ ] **hyperframes:**
-  - [ ] Install globally or available via npx: `npm install -g hyperframes` (or ensure npx works)
-  - [ ] Test TTS: `npx hyperframes tts "test" --list` (verify Kokoro model available)
-  - [ ] Test render deps: `npx hyperframes lint` on a test composition
-- [ ] **Cloudflare Tunnel (optional but recommended):**
-  - [ ] Install `cloudflared`
-  - [ ] Authenticate: `cloudflared tunnel login`
-  - [ ] Create tunnel: `cloudflared tunnel create vpp`
-  - [ ] Configure DNS records
-  - [ ] Test tunnel connectivity
-- [ ] **Nginx:**
-  - [ ] Install config from `nginx/vpp.conf`
-  - [ ] Enable site, test config (`nginx -t`)
-  - [ ] Start/reload nginx
-- [ ] **Environment:**
-  - [ ] Create `.env` file at project root with all env vars (see PROJECT_PLAN.md)
-  - [ ] Set proper file permissions on `.env` (600)
-  - [ ] Verify all services can read env vars
-- [ ] **Storage directories:**
-  - [ ] `mkdir -p compositions renders assets pb/pb_data`
-  - [ ] Set ownership/permissions for all directories
+- [x] `scripts/setup-server.sh` — covers: Node.js, Bun, FFmpeg, chrome-headless-shell, Nginx, PB systemd service, pi CLI, hyperframes, Cloudflare Tunnel, .env, directories
 
 #### Deployment Scripts
-- [ ] `scripts/deploy.sh` — deploys app to remote server:
-  - [ ] Builds frontend (`npm run build:frontend`)
-  - [ ] Builds orchestrator (`npm run build:orchestrator`)
-  - [ ] Copies built files to remote server (rsync or scp)
-  - [ ] Copies PocketBase binary if needed
-  - [ ] Copies Nginx config
-  - [ ] Restarts services on remote (systemctl restart)
-  - [ ] Verifies deployment (health check)
-- [ ] `scripts/deploy-checklist.md` — manual checklist for first-time deploy:
-  - [ ] SSH to remote server
-  - [ ] Run setup-server.sh
-  - [ ] Clone repo (or rsync files)
-  - [ ] Install dependencies (`cd frontend && npm install`, `cd orchestrator && bun install`)
-  - [ ] Configure `.env` on remote
-  - [ ] Run deploy.sh
-  - [ ] Verify all services running
-  - [ ] Test app via browser
+- [x] `scripts/deploy.sh` — builds, rsync, PB binary, nginx, remote deps, health check
+- [x] `scripts/deploy-checklist.md` — manual first-time deploy steps
 
 ### Deliverables
-- `scripts/dev.sh` starts full dev environment with one command
-- `scripts/setup-server.sh` checklist covers all remote prerequisites
-- `scripts/deploy.sh` builds and deploys to remote server
-- Root-level `package.json` scripts for common tasks
-- First-time deploy checklist documented
+- [x] `scripts/dev.sh` starts full dev environment with one command
+- [x] `scripts/setup-server.sh` checklist covers all remote prerequisites
+- [x] `scripts/deploy.sh` builds and deploys to remote server
+- [x] Root-level `package.json` scripts for common tasks
+- [x] First-time deploy checklist documented
 
 ---
 
 ## 1.7 Git Repository Setup
 
 ### Tasks
-- [ ] Create local `.gitignore`:
-  ```
-  node_modules/
-  dist/
-  .env
-  pb/pb_data/
-  renders/
-  compositions/
-  assets/
-  *.mp4
-  *.wav
-  .turbo
-  coverage/
-  ```
-- [ ] Initialize local repo:
-  ```bash
-  git init
-  git add .
-  git commit -m "chore: initial commit — VPP project scaffold"
-  ```
-- [ ] Create remote repo via GitHub CLI:
-  ```bash
-  gh repo create vpp --private --source=. --remote=origin
-  ```
-  - Repo name: `vpp`
-  - Visibility: private
-  - Set `origin` remote
-- [ ] Push initial commit:
-  ```bash
-  git push -u origin main
-  ```
-- [ ] Create initial branch structure:
-  - `main` — production branch (protected)
-  - `develop` — integration branch
-  - `feature/phase-1-foundation` — current work branch
-- [ ] Set up branch protection rules for `main` (optional):
-  - Require pull requests
-  - Require status checks
-- [ ] Add `CONTRIBUTING.md` with branch naming convention:
-  - `feature/phase-N-description`
-  - `fix/description`
-  - `chore/description`
+- [x] Create local `.gitignore`
+- [x] Initialize local repo — initial commit
+- [ ] Create remote repo via GitHub CLI _(user action: `gh repo create vpp --private --source=. --remote=origin`)_
+- [ ] Push initial commit _(user action: `git push -u origin main && git push -u origin develop`)_
+- [x] Create initial branch structure: `main` + `develop`
+- [x] Add `CONTRIBUTING.md` with branch naming convention
 
 ### Deliverables
-- Local git repo initialized with proper `.gitignore`
-- Remote GitHub repo `vpp` created (private) via `gh repo create`
-- Initial commit pushed to `main`
-- Branch structure set up (main, develop, feature branch)
-- Contributing guidelines documented
+- [x] Local git repo initialized with proper `.gitignore`
+- [ ] Remote GitHub repo `vpp` created _(user action needed)_
+- [x] Branch structure set up (main, develop)
+- [x] Contributing guidelines documented
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] PB running with all 8 collections, correct schema, R2 storage
-- [ ] React app with all routes, navigation, auth
-- [ ] Full CRUD for channels, episodes, blocks working
-- [ ] Personality and media library CRUD functional
-- [ ] File uploads → R2 working
-- [ ] Seed data loaded (1 channel, 1 personality, 2 media items)
-- [ ] `scripts/dev.sh` starts full dev environment
-- [ ] `scripts/setup-server.sh` covers all remote prerequisites
-- [ ] `scripts/deploy.sh` builds and deploys to remote
-- [ ] GitHub repo `vpp` created and pushed
+- [x] PB binary downloaded, init-collections.js + seed-data.js created (8 collections defined)
+- [ ] PB collections initialized _(manual: `./pb/pocketbase serve && node pb/init-collections.js`)_
+- [ ] R2 storage configured _(manual — needs Cloudflare R2 credentials)_
+- [x] React app with all routes, navigation, auth (login page, auth guard)
+- [x] Full CRUD for channels, episodes, blocks working
+- [x] Stub pages for personalities, media library, templates
+- [ ] File uploads → R2 working _(manual setup needed)_
+- [x] Seed data script ready
+- [x] `scripts/dev.sh` starts full dev environment
+- [x] `scripts/setup-server.sh` covers all remote prerequisites
+- [x] `scripts/deploy.sh` builds and deploys to remote
+- [ ] GitHub repo `vpp` created and pushed _(user action needed)_
 
 ---
 

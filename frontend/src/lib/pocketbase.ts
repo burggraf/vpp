@@ -1,5 +1,5 @@
 import PocketBase from 'pocketbase'
-import type { AuthUser } from './types'
+import type { AuthUser } from '@/types'
 
 const pbUrl = import.meta.env.VITE_PB_URL || 'http://127.0.0.1:8090'
 

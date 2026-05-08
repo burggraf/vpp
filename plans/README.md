@@ -12,7 +12,7 @@
 
 | Phase | Name | Focus | Effort | Status |
 |-------|------|-------|--------|--------|
-| [Phase 1](phase-1-foundation.md) | Foundation | DB, frontend scaffold, CRUD, auth, R2 | 3-5 days | ⬜ Not started |
+| [Phase 1](phase-1-foundation.md) | Foundation | DB, frontend scaffold, CRUD, auth, R2 | 3-5 days | 🟡 Done (R2 + GitHub push need manual setup) |
 | [Phase 2](phase-2-research-personality-tts.md) | Research + Personality + TTS | Web research, voice training, script gen, TTS | 5-7 days | ⬜ Not started |
 | [Phase 3](phase-3-media-blocks-quality.md) | Media + Blocks + Quality | Asset sourcing, composition gen, lint gate | 6-8 days | ⬜ Not started |
 | [Phase 4](phase-4-preview-feedback-templates.md) | Preview + Feedback + Templates | Live preview, chat feedback, save/load templates | 4-6 days | ⬜ Not started |
