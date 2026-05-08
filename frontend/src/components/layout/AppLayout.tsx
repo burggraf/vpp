@@ -7,7 +7,6 @@ import {
   RadioTower,
   Calendar,
   FileText,
-  Plus,
   Clapperboard,
   Users,
   Image,
@@ -73,17 +72,6 @@ export function AppLayout() {
             )
           })}
         </nav>
-
-        {/* Quick Actions */}
-        <div className="border-t border-zinc-800 px-3 py-4">
-          <Link
-            to="/channels"
-            className="flex items-center gap-2 rounded-md bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700 transition-colors"
-          >
-            <Plus className="h-4 w-4" />
-            New Episode
-          </Link>
-        </div>
 
         {/* User Menu */}
         <div className="border-t border-zinc-800 px-3 py-3">
