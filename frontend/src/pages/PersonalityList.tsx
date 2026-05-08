@@ -21,6 +21,8 @@ export function PersonalityList() {
       const data = await pb.collection('personalities').getList<Personality>(1, 50, { sort: '-id' })
       setPersonalities(data.items)
     } catch (err) {
+      // PB SDK auto-cancels in-flight requests on StrictMode double-render — ignore
+      if (err instanceof DOMException && err.name === 'AbortError') return
       console.error('Failed to load personalities:', err)
     } finally {
       setLoading(false)
