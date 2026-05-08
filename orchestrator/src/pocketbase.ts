@@ -32,7 +32,7 @@ export async function pbList(
   const pb = await authAdmin()
   return pb.collection(collection).getList(1, 50, {
     ...params,
-    sort: '-created',
+    sort: '-id',
   })
 }
 

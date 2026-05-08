@@ -57,7 +57,7 @@ personalityRoutes.post('/personalities', async (c) => {
       description: description || '',
       voice_profile: {},
       training_sources: [],
-      system_prompt: '',
+      system_prompt: ' ',  // placeholder — filled after training
       sample_output: '',
       status: 'draft',
     })

@@ -28,7 +28,7 @@ scriptRoutes.post('/episodes/:id/script/generate', async (c) => {
       episode: episodeId,
       personality: personalityId,
       research: researchId || '',
-      content: '',
+      content: ' ',  // placeholder — filled after generation
       segments: [],
       word_count: 0,
       estimated_duration: 0,
@@ -141,7 +141,7 @@ scriptRoutes.post('/episodes/:id/script/revise', async (c) => {
     // Find latest script for episode
     const results = await pbList('scripts', {
       filter: `episode="${episodeId}"`,
-      sort: '-created',
+      sort: '-id',
     })
 
     if (results.items.length === 0) {
@@ -175,7 +175,7 @@ scriptRoutes.post('/episodes/:id/script/approve', async (c) => {
   try {
     const results = await pbList('scripts', {
       filter: `episode="${episodeId}"`,
-      sort: '-created',
+      sort: '-id',
     })
 
     if (results.items.length === 0) {
@@ -203,7 +203,7 @@ scriptRoutes.get('/episodes/:id/script', async (c) => {
   try {
     const results = await pbList('scripts', {
       filter: `episode="${episodeId}"`,
-      sort: '-created',
+      sort: '-id',
     })
 
     if (results.items.length === 0) {

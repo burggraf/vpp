@@ -18,7 +18,7 @@ export function PersonalityList() {
 
   async function loadPersonalities() {
     try {
-      const data = await pb.collection('personalities').getList<Personality>(1, 50, { sort: '-created' })
+      const data = await pb.collection('personalities').getList<Personality>(1, 50, { sort: '-id' })
       setPersonalities(data.items)
     } catch (err) {
       console.error('Failed to load personalities:', err)
