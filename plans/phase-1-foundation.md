@@ -296,15 +296,15 @@ status (select: active/archived, default: active)
 ### Tasks
 - [x] Create local `.gitignore`
 - [x] Initialize local repo — initial commit
-- [ ] Create remote repo via GitHub CLI _(user action: `gh repo create vpp --private --source=. --remote=origin`)_
-- [ ] Push initial commit _(user action: `git push -u origin main && git push -u origin develop`)_
+- [x] Create remote repo via GitHub CLI — `github.com/burggraf/vpp` (public)
+- [x] Push initial commit — main + develop pushed to origin
 - [x] Create initial branch structure: `main` + `develop`
 - [x] Add `CONTRIBUTING.md` with branch naming convention
 
 ### Deliverables
 - [x] Local git repo initialized with proper `.gitignore`
-- [ ] Remote GitHub repo `vpp` created _(user action needed)_
-- [x] Branch structure set up (main, develop)
+- [x] Remote GitHub repo `vpp` created — `github.com/burggraf/vpp` (public)
+- [x] Branch structure set up (main, develop) — both pushed
 - [x] Contributing guidelines documented
 
 ---
@@ -322,7 +322,7 @@ status (select: active/archived, default: active)
 - [x] `scripts/dev.sh` starts full dev environment
 - [x] `scripts/setup-server.sh` covers all remote prerequisites
 - [x] `scripts/deploy.sh` builds and deploys to remote
-- [ ] GitHub repo `vpp` created and pushed _(user action needed)_
+- [x] GitHub repo `vpp` created and pushed — `github.com/burggraf/vpp`
 
 ---
 

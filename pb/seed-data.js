@@ -2,215 +2,119 @@ const PocketBase = require('pocketbase/cjs');
 
 const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090';
 const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || 'admin@vpp.local';
-const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'admin123456';
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'password1234';
+
+async function exists(pb, collection, field, value) {
+  const items = await pb.collection(collection).getFullList(100);
+  return items.find(i => i[field] === value);
+}
 
 async function seed() {
   const pb = new PocketBase(PB_URL);
+  await pb.collection('_superusers').authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
+  console.log('✓ Authenticated\n');
 
-  try {
-    await pb.admins.authWithPassword(ADMIN_EMAIL, ADMIN_PASSWORD);
-  } catch (err) {
-    console.error('Failed to authenticate as admin:', err.message);
-    process.exit(1);
+  console.log('Seeding sample data...\n');
+
+  // 1. Sample channel
+  if (!await exists(pb, 'channels', 'slug', 'tech-deep-dive')) {
+    const channel = await pb.collection('channels').create({
+      name: 'Tech Deep Dive',
+      slug: 'tech-deep-dive',
+      description: 'A channel that goes deep on developer tools and frameworks.',
+      style_dna: {
+        primary_font: 'Inter',
+        secondary_font: 'JetBrains Mono',
+        color_palette: ['#1a1a2e', '#16213e', '#0f3460', '#e94560'],
+        title_position: 'center',
+        lower_third_style: 'minimal',
+        transition_type: 'crossfade',
+        background_style: 'gradient',
+        logo_url: '',
+        intro_duration: 3,
+        outro_duration: 5,
+        resolution: '1920x1080',
+        fps: 30,
+        tts_voice: 'am_adam',
+        tts_speed: 1.0,
+      },
+      system_prompt: 'You are a tech explainer. Use clear, direct language. Focus on practical developer value. No fluff, no corporate speak.',
+      status: 'active',
+      episode_count: 0,
+      schedule_enabled: false,
+      schedule_auto_advance: false,
+    });
+    console.log(`  ✓ Created channel: ${channel.name} (${channel.id})`);
+  } else {
+    console.log('  - Channel already exists: tech-deep-dive');
   }
 
-  console.log('Seeding sample data...');
-
-  // --- 1 Channel ---
-  let channel;
-  try {
-    const existing = await pb.collection('channels').getList(1, 1, { filter: 'slug="tech-nexus"' });
-    if (existing.totalItems > 0) {
-      channel = existing.items[0];
-      console.log('  - Channel already exists: tech-nexus');
-    }
-  } catch {
-    // collection might not exist yet
+  // 2. Sample personality
+  if (!await exists(pb, 'personalities', 'slug', 'dev-narrator')) {
+    const personality = await pb.collection('personalities').create({
+      name: 'Dev Narrator',
+      slug: 'dev-narrator',
+      description: 'Conversational tech explainer, slightly sarcastic, enthusiastic about new tools.',
+      voice_profile: {
+        tone: 'conversational, slightly sarcastic, enthusiastic about tech',
+        pacing: 'fast, energetic',
+        vocabulary: 'developer-focused, uses terms like "ship it", "prod", "DX"',
+        avoid: ['corporate jargon', 'overly formal language', 'AI-sounding phrases'],
+        catchphrases: ["let's dive in", "here's the thing"],
+        sentence_style: 'short, punchy sentences. rhetorical questions. direct address ("you").',
+        humor_level: 'light, self-deprecating tech humor',
+      },
+      system_prompt: 'Write as Dev Narrator: conversational, slightly sarcastic, enthusiastic. Short punchy sentences. Use rhetorical questions. Address the viewer directly. No corporate speak.',
+      sample_output: "Hey, so here's the thing — a new framework just dropped and everyone's losing their minds. Let me break down why it actually matters for your daily work.",
+      status: 'active',
+    });
+    console.log(`  ✓ Created personality: ${personality.name} (${personality.id})`);
+  } else {
+    console.log('  - Personality already exists: dev-narrator');
   }
 
-  if (!channel) {
-    try {
-      channel = await pb.collection('channels').create({
-        name: 'Tech Nexus',
-        slug: 'tech-nexus',
-        description: 'A channel exploring emerging technology and its impact on society.',
-        style_dna: {
-          primary_font: 'Inter',
-          secondary_font: 'JetBrains Mono',
-          color_palette: ['#1a1a2e', '#16213e', '#0f3460', '#e94560'],
-          title_position: 'center',
-          lower_third_style: 'minimal',
-          transition_type: 'crossfade',
-          background_style: 'gradient',
-          logo_url: '',
-          intro_duration: 3,
-          outro_duration: 5,
-          resolution: '1920x1080',
-          fps: 30,
-          tts_voice: 'am_adam',
-          tts_speed: 1.0,
-        },
-        system_prompt: 'You are a technology analyst. Explain complex tech topics in accessible language. Use real-world examples and maintain an objective, informative tone.',
-        status: 'active',
-        episode_count: 0,
-        schedule_enabled: false,
-        schedule_auto_advance: false,
-      });
-      console.log('  ✓ Created channel: Tech Nexus');
-    } catch (err) {
-      console.error('  ✗ Failed to create channel:', err.message);
-    }
+  // 3. Sample media items (metadata only — no file uploads)
+  if (!await exists(pb, 'media_library', 'slug', 'lofi-coding-beats')) {
+    const media1 = await pb.collection('media_library').create({
+      name: 'Lo-Fi Coding Beats',
+      slug: 'lofi-coding-beats',
+      media_type: 'music',
+      category: 'background-music',
+      tags: ['lo-fi', 'coding', 'chill', 'background'],
+      file_url: '',
+      duration: 180,
+      license: 'CC BY 4.0 — Free Music Archive',
+      usage_count: 0,
+      description: 'Lo-fi hip hop background track, 90 BPM. Great for coding content.',
+    });
+    console.log(`  ✓ Created media: ${media1.name} (music)`);
+  } else {
+    console.log('  - Media already exists: lofi-coding-beats');
   }
 
-  // --- 1 Personality ---
-  let personality;
-  if (!personality) {
-    try {
-      const existing = await pb.collection('personalities').getList(1, 1, { filter: 'slug="narrator-alex"' });
-      if (existing.totalItems > 0) {
-        personality = existing.items[0];
-        console.log('  - Personality already exists: narrator-alex');
-      }
-    } catch {}
-  }
-
-  if (!personality) {
-    try {
-      personality = await pb.collection('personalities').create({
-        name: 'Narrator Alex',
-        slug: 'narrator-alex',
-        description: 'Calm, authoritative voice with a measured pace. Ideal for documentary-style content.',
-        voice_profile: {
-          voice_id: 'am_adam',
-          pitch: 0,
-          speed: 1.0,
-          stability: 0.75,
-          clarity: 0.8,
-          style: 0.2,
-        },
-        training_sources: [
-          { source: 'documentary-scripts', url: 'https://example.com/training/docs' },
-        ],
-        system_prompt: 'Speak in a calm, measured tone. Use clear enunciation. Pace delivery for comprehension. Emphasize key terms naturally.',
-        sample_output: 'Today we explore the fascinating world of artificial intelligence and its transformative potential.',
-        status: 'active',
-      });
-      console.log('  ✓ Created personality: Narrator Alex');
-    } catch (err) {
-      console.error('  ✗ Failed to create personality:', err.message);
-    }
-  }
-
-  // --- 1 Episode (depends on channel) ---
-  let episode;
-  if (channel) {
-    try {
-      const existing = await pb.collection('episodes').getList(1, 1, { filter: `slug="introduction-to-quantum-computing" && channel="${channel.id}"` });
-      if (existing.totalItems > 0) {
-        episode = existing.items[0];
-        console.log('  - Episode already exists: introduction-to-quantum-computing');
-      }
-    } catch {}
-
-    if (!episode) {
-      try {
-        episode = await pb.collection('episodes').create({
-          channel: channel.id,
-          title: 'Introduction to Quantum Computing',
-          slug: 'introduction-to-quantum-computing',
-          number: 1,
-          topic: 'quantum computing basics',
-          status: 'draft',
-          block_count: 0,
-          total_duration: 0,
-          feedback_log: [],
-          metadata: {},
-        });
-        console.log('  ✓ Created episode: Introduction to Quantum Computing');
-      } catch (err) {
-        console.error('  ✗ Failed to create episode:', err.message);
-      }
-    }
-  }
-
-  // --- 1 Episode Template (depends on channel) ---
-  if (channel) {
-    try {
-      const existing = await pb.collection('episode_templates').getList(1, 1, { filter: 'slug="standard-tech-episode"' });
-      if (existing.totalItems === 0) {
-        await pb.collection('episode_templates').create({
-          name: 'Standard Tech Episode',
-          slug: 'standard-tech-episode',
-          channel: channel.id,
-          description: 'Default template for tech explainer episodes.',
-          block_structure: [
-            { type: 'intro', order: 0, duration: 10 },
-            { type: 'title', order: 1, duration: 5 },
-            { type: 'content', order: 2, duration: 300 },
-            { type: 'lower_third', order: 3, duration: 8 },
-            { type: 'content', order: 4, duration: 300 },
-            { type: 'transition', order: 5, duration: 3 },
-            { type: 'content', order: 6, duration: 300 },
-            { type: 'outro', order: 7, duration: 15 },
-          ],
-          composition_files: ['base_template.aep', 'lower_third_template.aep'],
-          default_research_depth: { web_search: true, depth: 'medium', max_sources: 10 },
-          default_duration: 900,
-          variables: {},
-          usage_count: 0,
-          status: 'active',
-        });
-        console.log('  ✓ Created template: Standard Tech Episode');
-      } else {
-        console.log('  - Template already exists: standard-tech-episode');
-      }
-    } catch (err) {
-      console.error('  ✗ Failed to create template:', err.message);
-    }
-  }
-
-  // --- 2 Media Library items (using file_url since actual files need uploads) ---
-  const mediaItems = [
-    {
-      name: 'Quantum Chip Background',
-      slug: 'quantum-chip-bg',
-      media_type: 'image',
-      category: 'backgrounds',
-      tags: ['quantum', 'technology', 'chip'],
-      file_url: 'https://example.com/media/quantum-chip-bg.jpg',
+  if (!await exists(pb, 'media_library', 'slug', 'gradient-bg-default')) {
+    const media2 = await pb.collection('media_library').create({
+      name: 'Default Gradient BG',
+      slug: 'gradient-bg-default',
+      media_type: 'graphic',
+      category: 'background',
+      tags: ['gradient', 'dark', 'purple', 'background'],
+      file_url: '',
       dimensions: { width: 1920, height: 1080 },
-      license: 'CC BY 4.0',
-      description: 'High-resolution image of a quantum processor chip.',
-    },
-    {
-      name: 'Transition Swipe SFX',
-      slug: 'transition-swipe-sfx',
-      media_type: 'sfx',
-      category: 'transitions',
-      tags: ['transition', 'swipe', 'clean'],
-      file_url: 'https://example.com/media/transition-swipe.mp3',
-      duration: 1.5,
-      license: 'MIT',
-      description: 'Clean swipe sound effect for scene transitions.',
-    },
-  ];
-
-  for (const item of mediaItems) {
-    try {
-      const existing = await pb.collection('media_library').getList(1, 1, { filter: `slug="${item.slug}"` });
-      if (existing.totalItems > 0) {
-        console.log(`  - Media already exists: ${item.slug}`);
-        continue;
-      }
-      // Note: file is required but we only have file_url; create with a placeholder approach
-      // For seeding, we skip file upload and just note it
-      console.log(`  ⚠ Skipping media "${item.name}" — requires actual file upload (use file_url: ${item.file_url})`);
-    } catch (err) {
-      console.error(`  ✗ Failed to seed media "${item.name}":`, err.message);
-    }
+      license: 'Generated — internal use',
+      usage_count: 0,
+      description: 'Default dark gradient background for content blocks.',
+    });
+    console.log(`  ✓ Created media: ${media2.name} (graphic)`);
+  } else {
+    console.log('  - Media already exists: gradient-bg-default');
   }
 
-  console.log('\n✅ Seed data complete.');
+  console.log('\n✓ Seed data complete');
 }
 
-seed().catch(console.error);
+seed().catch((err) => {
+  console.error('Fatal:', err.message || err);
+  if (err.response) console.error('Response:', JSON.stringify(err.response, null, 2));
+  process.exit(1);
+});
