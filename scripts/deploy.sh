@@ -31,7 +31,8 @@ if [ -d "orchestrator" ]; then
     cd orchestrator && bun run build && cd ..
     echo -e "${GREEN}✓ Orchestrator built${NC}"
 else
-    echo -e "${YELLOW}⊘ No orchestrator directory, skipping${NC}"
+    echo -e "${RED}✗ Orchestrator directory missing${NC}"
+    exit 1
 fi
 
 # ── Rsync to remote ──
@@ -43,6 +44,7 @@ rsync -avz --delete \
     --exclude 'renders' \
     --exclude 'compositions' \
     --exclude '.env' \
+    --exclude 'orchestrator/node_modules' \
     ./ "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
 echo -e "${GREEN}✓ Files synced${NC}"
 
@@ -64,30 +66,65 @@ fi
 # ── Install deps on remote ──
 echo -e "${BLUE}▶ Installing dependencies on remote...${NC}"
 ssh "${REMOTE_USER}@${REMOTE_HOST}" "cd ${REMOTE_DIR}/frontend && pnpm install --prod"
-if [ -d "orchestrator" ]; then
-    ssh "${REMOTE_USER}@${REMOTE_HOST}" "cd ${REMOTE_DIR}/orchestrator && bun install --production"
-fi
+ssh "${REMOTE_USER}@${REMOTE_HOST}" "cd ${REMOTE_DIR}/orchestrator && bun install --production"
 echo -e "${GREEN}✓ Dependencies installed${NC}"
+
+# ── Deploy orchestrator systemd service ──
+echo -e "${BLUE}▶ Deploying orchestrator service...${NC}"
+ssh "${REMOTE_USER}@${REMOTE_HOST}" "cat > /tmp/vpp-orchestrator.service << 'UNIT'
+[Unit]
+Description=VPP Orchestrator
+After=network.target pocketbase.service
+Wants=pocketbase.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=${REMOTE_DIR}/orchestrator
+ExecStart=$(ssh \"${REMOTE_USER}@${REMOTE_HOST}\" \"which bun 2>/dev/null || echo /root/.bun/bin/bun\") run start
+Restart=always
+RestartSec=5
+EnvironmentFile=${REMOTE_DIR}/orchestrator/.env
+
+[Install]
+WantedBy=multi-user.target
+UNIT"
+ssh "${REMOTE_USER}@${REMOTE_HOST}" "sudo mv /tmp/vpp-orchestrator.service /etc/systemd/system/vpp-orchestrator.service && sudo systemctl daemon-reload && sudo systemctl enable vpp-orchestrator && sudo systemctl restart vpp-orchestrator"
+echo -e "${GREEN}✓ Orchestrator service deployed${NC}"
 
 # ── Restart services ──
 echo -e "${BLUE}▶ Restarting services...${NC}"
 ssh "${REMOTE_USER}@${REMOTE_HOST}" "sudo systemctl restart pocketbase"
-echo -e "${GREEN}✓ Services restarted${NC}"
+echo -e "${GREEN}✓ PocketBase restarted${NC}"
 
-# ── Health check ──
-echo -e "${BLUE}▶ Running health check...${NC}"
+# ── Health checks ──
+echo -e "${BLUE}▶ Running health checks...${NC}"
 sleep 3
-HTTP_CODE=$(ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8090/api/health" 2>/dev/null || echo "000")
 
-if [ "$HTTP_CODE" = "200" ]; then
-    echo -e "${GREEN}✓ PocketBase healthy (HTTP $HTTP_CODE)${NC}"
+# PocketBase
+PB_CODE=$(ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8090/api/health" 2>/dev/null || echo "000")
+if [ "$PB_CODE" = "200" ]; then
+    echo -e "${GREEN}✓ PocketBase healthy (HTTP $PB_CODE)${NC}"
 else
-    echo -e "${RED}✗ PocketBase health check failed (HTTP $HTTP_CODE)${NC}"
+    echo -e "${RED}✗ PocketBase health check failed (HTTP $PB_CODE)${NC}"
     echo -e "${YELLOW}  SSH in and check: sudo systemctl status pocketbase${NC}"
+    exit 1
+fi
+
+# Orchestrator
+ORCH_CODE=$(ssh "${REMOTE_USER}@${REMOTE_HOST}" "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3001/health" 2>/dev/null || echo "000")
+if [ "$ORCH_CODE" = "200" ]; then
+    echo -e "${GREEN}✓ Orchestrator healthy (HTTP $ORCH_CODE)${NC}"
+else
+    echo -e "${RED}✗ Orchestrator health check failed (HTTP $ORCH_CODE)${NC}"
+    echo -e "${YELLOW}  SSH in and check: sudo systemctl status vpp-orchestrator${NC}"
     exit 1
 fi
 
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════${NC}"
 echo -e "${GREEN}  Deploy complete!${NC}"
+echo -e "${GREEN}  PocketBase : http://127.0.0.1:8090${NC}"
+echo -e "${GREEN}  Orchestrator: http://127.0.0.1:3001${NC}"
+echo -e "${GREEN}  Frontend   : via Nginx${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════${NC}"

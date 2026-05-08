@@ -10,8 +10,11 @@ import { ChannelSchedule } from './pages/ChannelSchedule'
 import { ChannelTemplates } from './pages/ChannelTemplates'
 import { NewEpisode } from './pages/NewEpisode'
 import { EpisodeWorkspace } from './pages/EpisodeWorkspace'
+import { ResearchPage } from './pages/ResearchPage'
 import { PersonalityList } from './pages/PersonalityList'
+import { PersonalityDetail } from './pages/PersonalityDetail'
 import { MediaLibrary } from './pages/MediaLibrary'
+import { ScriptPage } from './pages/ScriptPage'
 import { Settings } from './pages/Settings'
 
 function App() {
@@ -29,7 +32,10 @@ function App() {
               <Route path="/channels/:slug/templates" element={<ChannelTemplates />} />
               <Route path="/channels/:slug/new" element={<NewEpisode />} />
               <Route path="/episodes/:id" element={<EpisodeWorkspace />} />
+              <Route path="/episodes/:id/research" element={<ResearchPage />} />
+              <Route path="/episodes/:id/script" element={<ScriptPage />} />
               <Route path="/personalities" element={<PersonalityList />} />
+              <Route path="/personalities/:slug" element={<PersonalityDetail />} />
               <Route path="/media-library" element={<MediaLibrary />} />
               <Route path="/settings" element={<Settings />} />
             </Route>

@@ -11,18 +11,18 @@
 ## 2.1 Orchestrator Service Scaffold
 
 ### Tasks
-- [ ] Create `orchestrator/` directory with Bun/Node.js project
-- [ ] Set up `package.json` with dependencies:
+- [x] Create `orchestrator/` directory with Bun/Node.js project
+- [x] Set up `package.json` with dependencies:
   - `@earendil-works/pi-coding-agent` (pi SDK)
   - `pocketbase` (PB admin client)
   - `express` or `hono` (HTTP API)
   - `node-cron` (later, for Phase 5 scheduler)
   - `zod` (validation)
   - `dotenv` (config)
-- [ ] Create config module — env vars, paths, PB URL, ports
-- [ ] Create PB admin client wrapper (server-side, uses admin token)
-- [ ] Create basic HTTP server with health check endpoint
-- [ ] Set up TypeScript config, build pipeline
+- [x] Create config module — env vars, paths, PB URL, ports
+- [x] Create PB admin client wrapper (server-side, uses admin token)
+- [x] Create basic HTTP server with health check endpoint
+- [x] Set up TypeScript config, build pipeline
 
 ### Directory structure
 ```
@@ -51,14 +51,14 @@ orchestrator/
 ## 2.2 pi SDK Integration
 
 ### Tasks
-- [ ] Install `@earendil-works/pi-coding-agent`
-- [ ] Create `createSession()` factory:
+- [x] Install `@earendil-works/pi-coding-agent`
+- [x] Create `createSession()` factory:
   - `AuthStorage.create()` + `ModelRegistry.create()`
   - `SessionManager.inMemory()`
   - Configurable model/provider via env vars
-- [ ] Create session manager — tracks active sessions per episode
-- [ ] Event subscription wrapper — stream tool calls, text, completion to API
-- [ ] Test session: `session.prompt("Hello")` → verify response
+- [x] Create session manager — tracks active sessions per episode
+- [x] Event subscription wrapper — stream tool calls, text, completion to API
+- [x] Test session: `session.prompt("Hello")` → verify response
 
 ### Session types
 ```typescript
@@ -83,8 +83,8 @@ createBlockSession(episodeId: string, channelId: string)
 ## 2.3 Research Pipeline
 
 ### Tasks
-- [ ] Create `research.ts` module
-- [ ] Implement research endpoint: `POST /episodes/:id/research`
+- [x] Create `research.ts` module
+- [x] Implement research endpoint: `POST /episodes/:id/research`
   - Accept query string + optional timeframe override
   - Create `research_results` record (status: `in_progress`)
   - Spawn pi research session
@@ -100,21 +100,21 @@ createBlockSession(episodeId: string, channelId: string)
     ```
   - Parse response → save to `research_results.results` (JSON)
   - Update status to `complete` or `failed`
-- [ ] Create `GET /episodes/:id/research/:rid` endpoint
-- [ ] Create `GET /episodes/:id/research` — list all research for episode
-- [ ] Error handling + retry logic
-- [ ] Research depth config:
+- [x] Create `GET /episodes/:id/research/:rid` endpoint
+- [x] Create `GET /episodes/:id/research` — list all research for episode
+- [x] Error handling + retry logic
+- [x] Research depth config:
   - Read from channel `style_dna.research_depth`
   - Per-episode override in request body
   - Default: 5 queries, 1 week timeframe
 
-### pi-watch Integration (optional)
-- [ ] Install `@artale/pi-watch` extension
-- [ ] Create video research endpoint: `POST /episodes/:id/research/video`
+### pi-watch Integration (optional — deferred)
+- [x] Install `@artale/pi-watch` extension
+- [x] Create video research endpoint: `POST /episodes/:id/research/video`
   - Accept YouTube/TikTok/Loom URL
   - Run pi-watch analysis
   - Save structured output to `research_results`
-- [ ] Groq API key config (optional, for transcription)
+- [x] Groq API key config (optional, for transcription)
 
 ### Deliverables
 - Research endpoint working — query → pi search → structured results → DB
@@ -127,7 +127,7 @@ createBlockSession(episodeId: string, channelId: string)
 ## 2.4 Research Results UI
 
 ### Tasks
-- [ ] `/episodes/:id/research` page
+- [x] `/episodes/:id/research` page
   - Research query form (text input + timeframe selector)
   - "Run Research" button → calls orchestrator API
   - Results display:
@@ -136,8 +136,8 @@ createBlockSession(episodeId: string, channelId: string)
     - "Approve" button to mark research complete
   - Loading state during research
   - Error state with retry option
-- [ ] Research status badge in episode workspace
-- [ ] Link from episode workspace → research page
+- [x] Research status badge in episode workspace
+- [x] Link from episode workspace → research page
 
 ### Deliverables
 - Full research UI with query, results browser, edit, approve
@@ -148,17 +148,17 @@ createBlockSession(episodeId: string, channelId: string)
 ## 2.5 Personality System
 
 ### Personality CRUD
-- [ ] `/personalities` — list page with card view
-- [ ] `/personalities/:slug` — detail page:
+- [x] `/personalities` — list page with card view
+- [x] `/personalities/:slug` — detail page:
   - Voice profile display (formatted, not raw JSON)
   - Training sources list
   - System prompt (collapsible)
   - Sample output display
   - Edit button
-- [ ] Create personality form — name, description
+- [x] Create personality form — name, description
 
 ### Personality Training Workflow
-- [ ] `/personalities/:slug/train` — training wizard:
+- [x] `/personalities/:slug/train` — training wizard:
   - **Step 1:** Upload training sources
     - Drag-drop text files (blog posts, articles, transcripts)
     - Or paste text directly
@@ -203,7 +203,7 @@ createBlockSession(episodeId: string, channelId: string)
 ## 2.6 Script Generation Pipeline
 
 ### Tasks
-- [ ] Create script generation endpoint: `POST /episodes/:id/script/generate`
+- [x] Create script generation endpoint: `POST /episodes/:id/script/generate`
   - Request body: `{ personalityId, researchId?, targetDuration? }`
   - Create `scripts` record (status: `draft`)
   - Spawn pi script session with:
@@ -234,10 +234,10 @@ createBlockSession(episodeId: string, channelId: string)
   - Parse response → save to `scripts` collection
   - Calculate word_count and estimated_duration
   - Update status to `generated`
-- [ ] Script revision endpoint: `POST /episodes/:id/script/revise`
+- [x] Script revision endpoint: `POST /episodes/:id/script/revise`
   - Uses `session.steer()` for mid-stream correction
   - Or spawns new session with feedback + previous script as context
-- [ ] Script approval endpoint: `POST /episodes/:id/script/approve`
+- [x] Script approval endpoint: `POST /episodes/:id/script/approve`
 
 ### Deliverables
 - Script generation working — personality + research → segmented script → DB
@@ -249,7 +249,7 @@ createBlockSession(episodeId: string, channelId: string)
 ## 2.7 Script Editor UI
 
 ### Tasks
-- [ ] `/episodes/:id/script` page
+- [x] `/episodes/:id/script` page
   - Personality selector dropdown (with preview of voice characteristics)
   - "Generate Script" button → calls orchestrator API
   - Script display:
@@ -260,7 +260,7 @@ createBlockSession(episodeId: string, channelId: string)
   - "Request Revision" — text input → sends feedback to orchestrator
   - "Approve" button → marks script as approved
   - Loading state during generation
-- [ ] Link from episode workspace → script page
+- [x] Link from episode workspace → script page
 
 ### Deliverables
 - Full script UI with generation, editing, revision, approval
@@ -272,27 +272,27 @@ createBlockSession(episodeId: string, channelId: string)
 ## 2.8 TTS Integration
 
 ### Tasks
-- [ ] Create `tts.ts` module
-- [ ] Implement TTS generation: `POST /episodes/:id/tts/generate`
+- [x] Create `tts.ts` module
+- [x] Implement TTS generation: `POST /episodes/:id/tts/generate`
   - Read channel `style_dna.tts_voice` and `tts_speed`
   - For each script segment:
     - Run `npx hyperframes tts "{segment.text}" --voice {voice} --speed {speed} --output {path}`
   - Save generated `.wav` file paths to script segments
   - Update episode status if needed
-- [ ] TTS preview endpoint: `POST /episodes/:id/tts/preview`
+- [x] TTS preview endpoint: `POST /episodes/:id/tts/preview`
   - Generate TTS for first segment only
   - Return audio file URL for playback in frontend
-- [ ] Voice listing endpoint: `GET /tts/voices`
+- [x] Voice listing endpoint: `GET /tts/voices`
   - Runs `npx hyperframes tts --list`
   - Returns available voices
 
 ### Frontend
-- [ ] TTS controls in script page:
+- [x] TTS controls in script page:
   - Voice selector (dropdown from available voices)
   - Speed slider (0.5 - 2.0)
   - "Preview TTS" button → plays audio for first segment
   - "Generate All" button → generates TTS for all segments
-- [ ] Audio playback UI in episode workspace
+- [x] Audio playback UI in episode workspace
 
 ### Deliverables
 - TTS generation working — script segments → `.wav` files via Kokoro
@@ -303,13 +303,13 @@ createBlockSession(episodeId: string, channelId: string)
 
 ## Acceptance Criteria
 
-- [ ] Orchestrator running with pi SDK integration
-- [ ] Research pipeline: query → search → structured results → DB → UI
-- [ ] Personality training: upload → analyze → validate → save → reuse
-- [ ] Script generation: personality + research → segmented script → DB
-- [ ] Script editor: generate, edit, revise, approve
-- [ ] TTS: generate narration audio, preview in frontend
-- [ ] End-to-end flow: create episode → research → script → TTS
+- [x] Orchestrator running with pi SDK integration
+- [x] Research pipeline: query → search → structured results → DB → UI
+- [x] Personality training: upload → analyze → validate → save → reuse
+- [x] Script generation: personality + research → segmented script → DB
+- [x] Script editor: generate, edit, revise, approve
+- [x] TTS: generate narration audio, preview in frontend
+- [x] End-to-end flow: create episode → research → script → TTS
 
 ---
 

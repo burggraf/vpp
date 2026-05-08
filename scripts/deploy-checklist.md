@@ -22,6 +22,7 @@ ssh root@your-server-ip
 
 ### 4. Environment
 - [ ] `.env` file created on server at `/var/www/vpp/.env`
+- [ ] `orchestrator/.env` created (copy from root or separate)
 - [ ] Production values set (PB_URL, R2 credentials, GROQ_API_KEY, etc.)
 - [ ] `REMOTE_HOST`, `REMOTE_USER`, `REMOTE_DIR` set locally or in CI
 
@@ -46,6 +47,14 @@ export REMOTE_DIR=/var/www/vpp
 ### 8. Post-Deploy Verification
 - [ ] Frontend loads at domain
 - [ ] PocketBase admin accessible
-- [ ] API health: `curl http://server-ip:8090/api/health`
+- [ ] API health: `curl http://127.0.0.1:8090/api/health`
+- [ ] Orchestrator health: `curl http://127.0.0.1:3001/health`
+- [ ] Orchestrator ↔ PocketBase: `curl http://127.0.0.1:3001/health/pb`
 - [ ] Nginx proxying correctly
 - [ ] HTTPS working (if configured)
+
+### 9. Service Status
+- [ ] `sudo systemctl status pocketbase` — active (running)
+- [ ] `sudo systemctl status vpp-orchestrator` — active (running)
+- [ ] `sudo journalctl -u vpp-orchestrator -n 50` — no errors
+- [ ] Both services enabled: `sudo systemctl list-unit-files | grep -E 'pocketbase|vpp-orchestrator'`

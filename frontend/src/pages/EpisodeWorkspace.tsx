@@ -7,7 +7,7 @@ import { PipelineStepper, getPipelineStages } from '@/components/PipelineStepper
 import { BlockList } from '@/components/BlockList'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { ArrowLeft, Loader2, Clock, FileStack } from 'lucide-react'
+import { ArrowLeft, Loader2, Clock, FileStack, Search, FileText, Mic } from 'lucide-react'
 
 export function EpisodeWorkspace() {
   const { id } = useParams<{ id: string }>()
@@ -87,6 +87,18 @@ export function EpisodeWorkspace() {
               {episode.topic && <span className="ml-2">· Topic: {episode.topic}</span>}
             </p>
           </div>
+        </div>
+        <div className="flex gap-2">
+          <Link to={`/episodes/${episode.id}/research`}>
+            <Button variant="outline" size="sm">
+              <Search className="mr-2 h-4 w-4" /> Research
+            </Button>
+          </Link>
+          <Link to={`/episodes/${episode.id}/script`}>
+            <Button variant="outline" size="sm">
+              <FileText className="mr-2 h-4 w-4" /> Script
+            </Button>
+          </Link>
         </div>
       </div>
 

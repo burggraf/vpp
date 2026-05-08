@@ -9,6 +9,14 @@ NC='\033[0m'
 
 PB_DIR="./pb"
 
+# Kill existing PocketBase on port 8090
+PB_PID=$(lsof -ti :8090 2>/dev/null || true)
+if [ -n "$PB_PID" ]; then
+    echo -e "${YELLOW}⚠ Port 8090 in use (PID: $PB_PID) — killing...${NC}"
+    kill "$PB_PID" 2>/dev/null || kill -9 "$PB_PID" 2>/dev/null || true
+    sleep 1
+fi
+
 if [ ! -f "$PB_DIR/pocketbase" ]; then
     echo -e "${RED}✗ PocketBase binary not found at $PB_DIR/pocketbase${NC}"
     echo -e "${YELLOW}  Download from: https://pocketbase.io/docs/${NC}"

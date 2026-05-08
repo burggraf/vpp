@@ -6,10 +6,14 @@
     "dev": "./scripts/dev.sh",
     "dev:pb": "./scripts/dev-pb.sh",
     "dev:frontend": "cd frontend && pnpm dev",
-    "dev:orchestrator": "cd orchestrator && bun run dev",
+    "dev:orchestrator": "./scripts/dev-orchestrator.sh",
     "build:frontend": "cd frontend && pnpm build",
     "build:orchestrator": "cd orchestrator && bun run build",
     "lint": "cd frontend && pnpm lint",
-    "typecheck": "cd frontend && pnpm exec tsc --noEmit"
+    "typecheck": "cd frontend && pnpm exec tsc --noEmit",
+    "test": "cd orchestrator && bun test && cd ../frontend && pnpm test",
+    "test:watch": "cd orchestrator && bun test --watch & cd ../frontend && pnpm test:watch",
+    "dev:all": "./scripts/dev.sh",
+    "deploy": "./scripts/deploy.sh"
   }
 }
