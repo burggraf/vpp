@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
   { label: 'Settings', icon: Settings, href: '/settings' },
 ]
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logoutFn, authenticated } = useAuth()
@@ -125,7 +125,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto bg-zinc-900/50">
-        <div className="mx-auto max-w-7xl p-6">{children}</div>
+        <div className="mx-auto max-w-7xl p-6"><Outlet /></div>
       </main>
     </div>
   )

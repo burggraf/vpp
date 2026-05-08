@@ -8,7 +8,7 @@ export const pb = new PocketBase(pbUrl)
 // SDK 0.26.8+ handles auth refresh automatically; no autoRefresh() call needed
 
 export function login(email: string, password: string): Promise<AuthUser> {
-  return pb.collection('_superusers').authWithPassword<AuthUser>(email, password)
+  return pb.collection('users').authWithPassword<AuthUser>(email, password)
 }
 
 export function logout(): void {

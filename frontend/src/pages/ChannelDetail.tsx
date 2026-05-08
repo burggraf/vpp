@@ -55,7 +55,7 @@ export function ChannelDetail() {
         pb.collection('channels').getFirstListItem<Channel>(`slug="${slug}"`),
         pb.collection('episodes').getList<Episode>(1, 50, {
           filter: `channel="${slug}"`,
-          sort: '-created',
+          sort: 'number',
         }),
       ])
       setChannel(chResult)

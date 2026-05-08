@@ -61,7 +61,7 @@ export function ChannelList() {
   const fetchChannels = async () => {
     try {
       setLoading(true)
-      const result = await pb.collection('channels').getList<Channel>(1, 50, { sort: '-created' })
+      const result = await pb.collection('channels').getList<Channel>(1, 50)
       setChannels(result.items)
       setError(null)
     } catch (err: unknown) {

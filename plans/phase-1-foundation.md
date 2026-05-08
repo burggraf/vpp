@@ -253,13 +253,13 @@ status (select: active/archived, default: active)
 ## 1.5 R2 Storage Configuration
 
 ### Tasks
-- [ ] Configure PB S3 storage backend with R2 credentials _(manual — needs R2 creds)_
-- [ ] Test file upload → verify files land in R2 _(manual)_
-- [ ] Verify public URL generation _(manual)_
+- [x] Configure PB S3 storage backend with R2 credentials
+- [x] Test file upload → verified files land in R2 and are accessible via PB proxy URL
+- [x] Verify public URL generation (pb.files.getURL())
 - [x] Document R2 setup steps — `docs/R2_SETUP.md`
 
 ### Deliverables
-- [ ] File uploads working end-to-end _(manual setup needed)_
+- [x] File uploads working end-to-end (upload → R2 → fetch verified)
 - [x] Setup documentation for R2
 
 ---

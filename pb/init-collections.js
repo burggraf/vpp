@@ -1,6 +1,6 @@
 const PocketBase = require('pocketbase/cjs');
 
-const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090';
+const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090';//127.0.0.1:8090';
 const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || 'admin@vpp.local';
 const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'password1234';
 
@@ -53,7 +53,21 @@ const F = {
   select: (name, values, opts = {}) => ({ name, type: 'select', values, maxSelect: opts.maxSelect || 1 }),
   file: (name, opts = {}) => ({ name, type: 'file', maxSelect: opts.maxSelect || 1, maxSize: opts.maxSize || 10485760, mimeTypes: opts.mimeTypes || [] }),
   relation: (name, collectionId, opts = {}) => ({ name, type: 'relation', collectionId, maxSelect: opts.maxSelect || 1, cascadeDelete: !!opts.cascadeDelete }),
+  // PB 0.38.0 requires explicit autodate fields
+  autodate: () => [
+    { name: 'created', type: 'autodate', onCreate: { timestamp: '', timeUnit: '' }, onUpdate: { timestamp: '', timeUnit: '' } },
+    { name: 'updated', type: 'autodate', oncreate: { timestamp: '', timeUnit: '' }, onUpdate: { timestamp: '', timeUnit: '' } },
+  ],
 };
+
+// Helper: add autodate fields to collection field list
+function withTimestamps(fields) {
+  return [
+    ...fields,
+    { name: 'created', type: 'autodate' },
+    { name: 'updated', type: 'autodate' },
+  ];
+}
 
 async function init() {
   const pb = new PocketBase(PB_URL);
@@ -62,10 +76,38 @@ async function init() {
 
   console.log('Creating collections...\n');
 
+  // 0. users (auth collection)
+  try {
+    await pb.collections.getOne('users');
+    console.log(`  ✓ Exists: users`);
+  } catch {
+    await pb.send('/api/collections', {
+      method: 'POST',
+      body: {
+        name: 'users',
+        type: 'auth',
+        authRule: '',
+        manageRule: null,
+        listRule: '@request.auth.id != ""',
+        viewRule: '@request.auth.id != ""',
+        createRule: '',
+        updateRule: '@request.auth.id = id',
+        deleteRule: '@request.auth.id = id',
+        fields: [
+          { name: 'email', type: 'email', required: true, unique: true, exceptDomains: [], onlyDomains: [] },
+          { name: 'name', type: 'text', required: false, min: 0, max: 255, pattern: '' },
+        ],
+        oauth2: { enabled: false, mappedFields: { id: '', name: '', username: '', avatarURL: '' } },
+        passwordAuth: { enabled: true, identityFields: ['email'] },
+      },
+    });
+    console.log('  ✓ Created: users (auth)');
+  }
+
   // 1. channels
   await createOrUpdateCollection(pb, {
     name: 'channels',
-    fields: [
+    fields: withTimestamps([
       F.text('name', { required: true, max: 255 }),
       F.text('slug', { required: true, max: 255 }),
       F.text('description', { max: 5000 }),
@@ -78,13 +120,13 @@ async function init() {
       F.text('schedule'),
       F.bool('schedule_enabled'),
       F.bool('schedule_auto_advance'),
-    ],
+    ]),
   });
 
   // 2. personalities
   await createOrUpdateCollection(pb, {
     name: 'personalities',
-    fields: [
+    fields: withTimestamps([
       F.text('name', { required: true, max: 255 }),
       F.text('slug', { required: true, max: 255 }),
       F.text('description', { max: 2000 }),
@@ -93,13 +135,13 @@ async function init() {
       F.text('system_prompt', { required: true, max: 10000 }),
       F.text('sample_output', { max: 5000 }),
       F.select('status', ['active', 'draft', 'archived']),
-    ],
+    ]),
   });
 
   // 3. episodes
   await createOrUpdateCollection(pb, {
     name: 'episodes',
-    fields: [
+    fields: withTimestamps([
       F.relation('channel', await colId(pb, 'channels')),
       F.text('title', { required: true, max: 255 }),
       F.text('slug', { required: true, max: 255 }),
@@ -115,13 +157,13 @@ async function init() {
       F.text('video_url'),
       F.file('thumbnail', { maxSelect: 1, maxSize: 10485760 }),
       F.json('metadata'),
-    ],
+    ]),
   });
 
   // 4. episode_templates
   await createOrUpdateCollection(pb, {
     name: 'episode_templates',
-    fields: [
+    fields: withTimestamps([
       F.text('name', { required: true, max: 255 }),
       F.text('slug', { required: true, max: 255 }),
       F.relation('channel', await colId(pb, 'channels')),
@@ -135,13 +177,13 @@ async function init() {
       F.json('variables'),
       F.number('usage_count'),
       F.select('status', ['active', 'archived']),
-    ],
+    ]),
   });
 
   // 5. blocks
   await createOrUpdateCollection(pb, {
     name: 'blocks',
-    fields: [
+    fields: withTimestamps([
       F.relation('episode', await colId(pb, 'episodes')),
       F.select('block_type', ['intro', 'title', 'content', 'lower_third', 'transition', 'outro', 'caption']),
       F.number('order'),
@@ -153,26 +195,26 @@ async function init() {
       F.json('variables'),
       F.json('assets'),
       F.select('status', ['pending', 'generated', 'approved', 'needs_revision']),
-    ],
+    ]),
   });
 
   // 6. research_results
   await createOrUpdateCollection(pb, {
     name: 'research_results',
-    fields: [
+    fields: withTimestamps([
       F.relation('episode', await colId(pb, 'episodes')),
       F.text('query', { required: true, max: 1000 }),
       F.json('results', { required: true }),
       F.text('summary', { max: 5000 }),
       F.json('sources'),
       F.select('status', ['pending', 'in_progress', 'complete', 'failed']),
-    ],
+    ]),
   });
 
   // 7. scripts
   await createOrUpdateCollection(pb, {
     name: 'scripts',
-    fields: [
+    fields: withTimestamps([
       F.relation('episode', await colId(pb, 'episodes')),
       F.relation('personality', await colId(pb, 'personalities')),
       F.relation('research', await colId(pb, 'research_results')),
@@ -182,13 +224,13 @@ async function init() {
       F.number('estimated_duration'),
       F.select('status', ['draft', 'generated', 'approved', 'needs_revision']),
       F.text('revision_notes', { max: 2000 }),
-    ],
+    ]),
   });
 
   // 8. media_library
   await createOrUpdateCollection(pb, {
     name: 'media_library',
-    fields: [
+    fields: withTimestamps([
       F.text('name', { required: true, max: 255 }),
       F.text('slug', { required: true, max: 255 }),
       F.select('media_type', ['image', 'video', 'audio', 'music', 'sfx', 'font', 'graphic']),
@@ -201,7 +243,7 @@ async function init() {
       F.text('license'),
       F.number('usage_count'),
       F.text('description', { max: 2000 }),
-    ],
+    ]),
   });
 
   console.log('\n✓ All 8 collections initialized');
