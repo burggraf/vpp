@@ -1,0 +1,15 @@
+{
+  "name": "vpp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "./scripts/dev.sh",
+    "dev:pb": "./scripts/dev-pb.sh",
+    "dev:frontend": "cd frontend && pnpm dev",
+    "dev:orchestrator": "cd orchestrator && bun run dev",
+    "build:frontend": "cd frontend && pnpm build",
+    "build:orchestrator": "cd orchestrator && bun run build",
+    "lint": "cd frontend && pnpm lint",
+    "typecheck": "cd frontend && pnpm exec tsc --noEmit"
+  }
+}
