@@ -2,6 +2,21 @@
 
 > Manage hyperframes video production at scale — channels, episodes, blocks, agent-driven generation, preview, and rendering.
 
+## Testing
+
+**TDD is mandatory.** Write tests before or alongside implementation code.
+
+- **Unit tests** — `frontend/src/**/*.test.ts` / `frontend/src/**/*.test.tsx` (Vitest + React Testing Library)
+- **Integration tests** — test PB CRUD flows, auth flows, multi-component interactions
+- **E2E tests** — use Chrome DevTools (agent-browser CLI) or Playwright to test full user flows in a real browser before claiming anything works
+- **Coverage target** — aim for 80%+ line coverage on new code
+- **Run tests** — `pnpm test` (unit), browser testing via `agent-browser` or Playwright scripts
+- **No PR or claim of "done" without passing tests**
+
+## Auth
+
+No signup page. Users are created manually via PocketBase admin UI (`/_/`).
+
 ## Package Manager
 
 **Use `pnpm`, not `npm`.** All frontend deps, installs, scripts use pnpm. Orchestrator uses bun.
