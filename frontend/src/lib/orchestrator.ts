@@ -224,3 +224,71 @@ export async function deleteTemplate(templateId: string) {
     method: 'DELETE',
   })
 }
+
+// Media Library API
+export async function searchMedia(query: string, options?: { type?: string; limit?: number; sourceId?: string }) {
+  return orchestratorFetch('/api/media/search', {
+    method: 'POST',
+    body: JSON.stringify({ query, ...options }),
+  })
+}
+
+export async function downloadMediaAsset(data: {
+  sourceId: string
+  assetId: string
+  name?: string
+  mediaType?: string
+  category?: string
+  tags?: string[]
+  license?: string
+}) {
+  return orchestratorFetch('/api/media/download', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function listMediaSources() {
+  return orchestratorFetch('/api/media/sources')
+}
+
+export async function updateMediaSource(sourceId: string, enabled: boolean) {
+  return orchestratorFetch(`/api/media/sources/${sourceId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  })
+}
+
+// Episode media analysis
+export async function analyzeEpisodeMedia(episodeId: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/media/analyze`, {
+    method: 'POST',
+  })
+}
+
+export async function getEpisodeMediaAnalysis(episodeId: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/media/analysis`)
+}
+
+// Block generation
+export async function generateBlocks(episodeId: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/blocks/generate`, {
+    method: 'POST',
+  })
+}
+
+// Quality gate
+export async function runQualityGate(episodeId: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/quality-gate`, {
+    method: 'POST',
+  })
+}
+
+export async function getQualityGateReport(episodeId: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/quality-gate`)
+}
+
+// Queue
+export async function getQueueStatus() {
+  return orchestratorFetch('/api/queue')
+}

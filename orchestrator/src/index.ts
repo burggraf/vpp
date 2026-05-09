@@ -12,17 +12,21 @@ import { scriptRoutes } from './routes/script'
 import { ttsRoutes } from './routes/tts'
 import { episodeRoutes } from './routes/episode'
 import { templateRoutes } from './routes/templates'
+import { mediaRoutes } from './routes/media'
+import { mediaAnalysisRoutes } from './routes/media-analysis'
+import { blockRoutes } from './routes/blocks'
+import { qualityRoutes } from './routes/quality'
+import { queueRoutes } from './routes/queue'
+import { mediaRegistry, UnsplashSource, PexelsSource, PixabaySource, ScreenCaptureSource } from './media'
 
 const app = new Hono()
 
-// Middleware
 app.use('*', logger())
 app.use('*', cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: ['http://localhost:5173', 'http://localhost:8090'],
   credentials: true,
 }))
 
-// Health check
 app.get('/health', (c) => c.json({
   status: 'ok',
   timestamp: new Date().toISOString(),
@@ -30,7 +34,6 @@ app.get('/health', (c) => c.json({
   port: config.ORCHESTRATOR_PORT,
 }))
 
-// Test PB connection
 app.get('/health/pb', async (c) => {
   try {
     const pb = await authAdmin()
@@ -48,15 +51,18 @@ app.get('/health/pb', async (c) => {
   }
 })
 
-// Mount route modules
 app.route('/api', researchRoutes)
 app.route('/api', personalityRoutes)
 app.route('/api', scriptRoutes)
 app.route('/api', ttsRoutes)
 app.route('/api', episodeRoutes)
 app.route('/api', templateRoutes)
+app.route('/api', mediaRoutes)
+app.route('/api', mediaAnalysisRoutes)
+app.route('/api', blockRoutes)
+app.route('/api', qualityRoutes)
+app.route('/api', queueRoutes)
 
-// Error handler
 app.onError((err, c) => {
   console.error('❌ Unhandled error:', err)
   return c.json({
@@ -65,11 +71,16 @@ app.onError((err, c) => {
   }, 500)
 })
 
-// Not found handler
 app.notFound((c) => {
   return c.json({ error: 'Not Found', path: c.req.path }, 404)
 })
 
-// Start server
+// Register media sources
+mediaRegistry.register(new UnsplashSource())
+mediaRegistry.register(new PexelsSource())
+mediaRegistry.register(new PixabaySource())
+mediaRegistry.register(new ScreenCaptureSource())
+console.log(`📸 Media sources registered: ${mediaRegistry.list().map(s => s.id).join(', ')}`)
+
 console.log(`🚀 Orchestrator starting on port ${config.ORCHESTRATOR_PORT}...`)
 Bun.serve({ port: config.ORCHESTRATOR_PORT, fetch: app.fetch })

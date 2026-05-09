@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { pb } from '@/lib/pocketbase'
-import { saveAsTemplate } from '@/lib/orchestrator'
+import { saveAsTemplate, analyzeEpisodeMedia, generateBlocks, runQualityGate } from '@/lib/orchestrator'
 import type { Episode, Block } from '@/types'
 import { StatusBadge } from '@/components/StatusBadge'
+import { Badge } from '@/components/ui/badge'
 import { PipelineStepper, getPipelineStages } from '@/components/PipelineStepper'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,6 +38,9 @@ import {
   Film,
   GripVertical,
   Save,
+  Shield,
+  Clapperboard as ClapperboardIcon,
+  Loader2 as Loader2Icon,
 } from 'lucide-react'
 
 const BLOCK_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -81,6 +85,9 @@ export function EpisodeWorkspace() {
   // Preview state
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewBlock, setPreviewBlock] = useState<Block | null>(null)
+  const [generatingBlocks, setGeneratingBlocks] = useState(false)
+  const [runningQuality, setRunningQuality] = useState(false)
+  const [qualityReport, setQualityReport] = useState<any>(null)
 
   const fetchEpisode = async () => {
     if (!id) return
@@ -195,6 +202,33 @@ export function EpisodeWorkspace() {
     } catch { /* ignore */ }
   }
 
+  const handleGenerateBlocks = async () => {
+    if (!episode) return
+    try {
+      setGeneratingBlocks(true)
+      await generateBlocks(episode.id)
+      await fetchEpisode()
+      await fetchBlocks()
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Block generation failed')
+    } finally {
+      setGeneratingBlocks(false)
+    }
+  }
+
+  const handleQualityGate = async () => {
+    if (!episode) return
+    try {
+      setRunningQuality(true)
+      const result = await runQualityGate(episode.id)
+      setQualityReport(result.report)
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Quality gate failed')
+    } finally {
+      setRunningQuality(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -232,6 +266,19 @@ export function EpisodeWorkspace() {
               <FileText className="mr-2 h-4 w-4" /> Script
             </Button>
           </Link>
+          <Link to={`/episodes/${episode.id}/media`}>
+            <Button variant="outline" size="sm">
+              <Music className="mr-2 h-4 w-4" /> Media
+            </Button>
+          </Link>
+          <Button variant="outline" size="sm" onClick={handleGenerateBlocks} disabled={generatingBlocks}>
+            {generatingBlocks ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <ClapperboardIcon className="mr-2 h-4 w-4" />}
+            Generate Blocks
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleQualityGate} disabled={runningQuality}>
+            {runningQuality ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Shield className="mr-2 h-4 w-4" />}
+            Quality Gate
+          </Button>
         </div>
       </div>
 
@@ -393,6 +440,43 @@ export function EpisodeWorkspace() {
           )}
         </CardContent>
       </Card>
+
+      {/* Quality Gate Report */}
+      {qualityReport && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" /> Quality Gate
+              <Badge variant={qualityReport.passed ? 'default' : 'destructive'} className="ml-auto">
+                {qualityReport.passed ? 'Passed' : 'Failed'}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {qualityReport.checks?.map((check: any, i: number) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className={`h-2 w-2 rounded-full mt-2 ${check.passed ? 'bg-green-500' : 'bg-red-500'}`} />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-zinc-300">{check.name}</p>
+                  {check.errors.length > 0 && (
+                    <ul className="text-xs text-red-400 mt-1">
+                      {check.errors.map((e: string, j: number) => <li key={j}>• {e}</li>)}
+                    </ul>
+                  )}
+                  {check.warnings.length > 0 && (
+                    <ul className="text-xs text-yellow-400 mt-1">
+                      {check.warnings.map((w: string, j: number) => <li key={j}>• {w}</li>)}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            ))}
+            <p className="text-xs text-zinc-500 mt-2">
+              {qualityReport.totalErrors} errors, {qualityReport.totalWarnings} warnings
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Save as Template Dialog */}
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>

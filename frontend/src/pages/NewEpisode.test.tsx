@@ -21,7 +21,7 @@ vi.mock('@/lib/pocketbase', () => ({
 }))
 
 vi.mock('@/lib/orchestrator', () => ({
-  startEpisodeGeneration: vi.fn(() => ({ close: vi.fn() })),
+  startEpisodeGeneration: vi.fn(() => ({ abort: vi.fn() })),
 }))
 
 const mockChannel = {

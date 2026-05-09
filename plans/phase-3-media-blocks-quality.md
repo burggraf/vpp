@@ -11,25 +11,25 @@
 ## 3.1 Media Library CRUD + Catalog
 
 ### Tasks
-- [ ] `/media-library` page
+- [x] `/media-library` page
   - Grid view with thumbnails
   - Filters: media_type, category, tags
   - Search by name or tags
   - Sort: name, usage_count, created date
-- [ ] `/media-library/:id` page
+- [x] `/media-library/:id` page
   - File preview (image, audio player, video player)
   - Metadata: name, type, category, tags, license, duration, dimensions
   - Usage history (which episodes used this asset)
   - Edit button
-- [ ] Upload modal
+- [x] Upload modal
   - Drag-drop zone
   - File type detection
   - Auto-tag based on type (e.g., `image` → auto-tag `image`)
   - Name, category, tags, license fields
   - Upload to PB → R2
   - Catalog entry created
-- [ ] Bulk upload support
-- [ ] Delete with confirmation (check usage_count first)
+- [x] Bulk upload support
+- [x] Delete with confirmation (check usage_count first)
 
 ### Deliverables
 - Full media library UI with browse, search, filter, upload, preview
@@ -40,7 +40,7 @@
 ## 3.2 Media Source Registry (extensible)
 
 ### Tasks
-- [ ] Create media source registry pattern in orchestrator:
+- [x] Create media source registry pattern in orchestrator:
   ```typescript
   interface MediaSource {
     id: string;
@@ -51,13 +51,13 @@
     download(assetId: string, path: string): Promise<string>;
   }
   ```
-- [ ] **Upload source** — always enabled, handles manual uploads
-- [ ] **Screen capture source** — puppeteer/Playwright screenshot of URL
-- [ ] **Unsplash source** — free API, enabled by default
-- [ ] **Pexels source** — free API, enabled by default
-- [ ] **Pixabay source** — free API, enabled by default
-- [ ] **AI image source** — Gemini API (default), extensible interface
-- [ ] Registry stored as config (not hardcoded):
+- [x] **Upload source** — always enabled, handles manual uploads
+- [x] **Screen capture source** — puppeteer/Playwright screenshot of URL
+- [x] **Unsplash source** — free API, enabled by default
+- [x] **Pexels source** — free API, enabled by default
+- [x] **Pixabay source** — free API, enabled by default
+- [x] **AI image source** — Gemini API (default), extensible interface
+- [x] Registry stored as config (not hardcoded):
   ```json
   {
     "sources": [
@@ -68,7 +68,7 @@
     ]
   }
   ```
-- [ ] Settings page to enable/disable sources
+- [x] Settings page to enable/disable sources
 
 ### API keys needed
 - `UNSPLASH_ACCESS_KEY` (free tier)
@@ -86,7 +86,7 @@
 ## 3.3 Media Analysis Pipeline
 
 ### Tasks
-- [ ] Create media analysis endpoint: `POST /episodes/:id/media/analyze`
+- [x] Create media analysis endpoint: `POST /episodes/:id/media/analyze`
   - Input: approved script segments
   - Orchestrator spawns pi session with prompt:
     ```
@@ -122,8 +122,8 @@
     ```
   - Save analysis to episode record
   - Returns structured media requirements
-- [ ] Media library search integration — for each visual need, search library for matches
-- [ ] Gap analysis — identify what's available vs. what needs sourcing
+- [x] Media library search integration — for each visual need, search library for matches
+- [x] Gap analysis — identify what's available vs. what needs sourcing
 
 ### Deliverables
 - Script analysis → media requirements → library search → gap analysis
@@ -133,7 +133,7 @@
 ## 3.4 Asset Picker UI
 
 ### Tasks
-- [ ] `/episodes/:id/media` page
+- [x] `/episodes/:id/media` page
   - Display media analysis results
   - For each segment:
     - Suggested assets from library (clickable cards)
@@ -143,7 +143,7 @@
   - "Generate missing" button → spawns pi to create needed assets
   - Background music selector (from music category in library + search sources)
   - Preview assets inline (click to see larger/play audio)
-- [ ] Asset-to-block mapping display
+- [x] Asset-to-block mapping display
   - Shows which assets are assigned to which blocks
   - Drag-and-drop or select-to-assign
 
@@ -157,18 +157,18 @@
 ## 3.5 Background Music Integration
 
 ### Tasks
-- [ ] Curate free-licensed music library:
+- [x] Curate free-licensed music library:
   - YouTube Audio Library (download common tracks)
   - Free Music Archive (download CC-licensed tracks)
   - Incompetech (download Kevin MacLeod tracks)
   - Store in `media_library` with type `music`, category `background-music`
   - Include license info and attribution requirements
-- [ ] Music selector UI in media page
+- [x] Music selector UI in media page
   - Browse available tracks
   - Preview playback
   - Filter by mood/genre/tempo
   - Assign to episode
-- [ ] Music asset stored in episode's assets for composition
+- [x] Music asset stored in episode's assets for composition
 
 ### Deliverables
 - Pre-loaded background music library (free-licensed)
@@ -180,7 +180,7 @@
 ## 3.6 Block Generation Pipeline
 
 ### Tasks
-- [ ] Create block generation endpoint: `POST /episodes/:id/blocks/generate`
+- [x] Create block generation endpoint: `POST /episodes/:id/blocks/generate`
   - Orchestrator spawns pi session with:
     - Channel system_prompt (Style DNA)
     - Approved script with segments
@@ -249,7 +249,7 @@
 ## 3.7 Block-to-Composition Assembly
 
 ### Tasks
-- [ ] Create `assembleIndexHtml()` function in orchestrator
+- [x] Create `assembleIndexHtml()` function in orchestrator
   - Reads all block records for an episode
   - Generates root `index.html` with:
     - `<div data-composition-id="root">` root element
@@ -257,9 +257,9 @@
     - Correct `data-start`, `data-duration`, `data-track-index` from block records
   - Includes GSAP CDN script tag
   - Registers master timeline
-- [ ] Write `index.html` to episode composition directory
-- [ ] Relative path resolution — ensure `data-composition-src` resolves correctly from episode dir
-- [ ] Validate assembled HTML (basic structure check)
+- [x] Write `index.html` to episode composition directory
+- [x] Relative path resolution — ensure `data-composition-src` resolves correctly from episode dir
+- [x] Validate assembled HTML (basic structure check)
 
 ### Deliverables
 - `index.html` correctly assembled from blocks
@@ -270,8 +270,8 @@
 ## 3.8 Quality Gate
 
 ### Tasks
-- [ ] Create quality gate module: `quality.ts`
-- [ ] Quality gate endpoint: `POST /episodes/:id/quality-gate`
+- [x] Create quality gate module: `quality.ts`
+- [x] Quality gate endpoint: `POST /episodes/:id/quality-gate`
   - Runs all checks, returns report:
     1. **`npx hyperframes lint`**
        - Run `npx hyperframes lint ./compositions/{channel}/{episode}`
@@ -291,10 +291,10 @@
        - Generate `<audio>` elements in compositions
   - Save report to episode record
   - Return: `{ passed: boolean, errors: [], warnings: [] }`
-- [ ] `GET /episodes/:id/quality-gate` — retrieve last report
+- [x] `GET /episodes/:id/quality-gate` — retrieve last report
 
 ### QualityGateReport UI component
-- [ ] Display quality gate results in episode workspace
+- [x] Display quality gate results in episode workspace
   - Pass/fail badge
   - Errors list (blocking)
   - Warnings list (non-blocking)
@@ -312,14 +312,14 @@
 ## 3.9 Queue Management
 
 ### Tasks
-- [ ] Implement queue manager in orchestrator
+- [x] Implement queue manager in orchestrator
   - Track active episode (one at a time)
   - Queue of pending episodes
   - Process queue when active episode completes/fails
   - Manual episodes can jump queue or enter at end
-- [ ] Queue state API: `GET /queue`
+- [x] Queue state API: `GET /queue`
   - Returns: `{ active: episode | null, queue: episode[], totalWaiting: number }`
-- [ ] Episode status transitions:
+- [x] Episode status transitions:
   - When an episode enters `generating` → add to queue
   - When queue processes → update to `in_progress` internally
   - When stage completes → move to next stage or complete
@@ -333,15 +333,15 @@
 
 ## Acceptance Criteria
 
-- [ ] Media library fully functional with browse, search, upload
-- [ ] Media source registry with 4+ sources (stock, AI, screen capture)
-- [ ] Script analysis → media requirements working
-- [ ] Asset picker UI with library + external source results
-- [ ] Background music library pre-loaded with free-licensed tracks
-- [ ] Block generation — script + media + Style DNA → hyperframes compositions
-- [ ] `index.html` assembled from blocks with correct references
-- [ ] Quality gate — lint + assets + duration → pass/fail report
-- [ ] Queue system — one episode at a time, manual + scheduled
+- [x] Media library fully functional with browse, search, upload
+- [x] Media source registry with 4+ sources (stock, AI, screen capture)
+- [x] Script analysis → media requirements working
+- [x] Asset picker UI with library + external source results
+- [x] Background music library pre-loaded with free-licensed tracks
+- [x] Block generation — script + media + Style DNA → hyperframes compositions
+- [x] `index.html` assembled from blocks with correct references
+- [x] Quality gate — lint + assets + duration → pass/fail report
+- [x] Queue system — one episode at a time, manual + scheduled
 
 ---
 

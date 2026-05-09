@@ -14,6 +14,8 @@ import { ResearchPage } from './pages/ResearchPage'
 import { PersonalityList } from './pages/PersonalityList'
 import { PersonalityDetail } from './pages/PersonalityDetail'
 import { MediaLibrary } from './pages/MediaLibrary'
+import { MediaDetail } from './pages/MediaDetail'
+import { EpisodeMedia } from './pages/EpisodeMedia'
 import { ScriptPage } from './pages/ScriptPage'
 import { Settings } from './pages/Settings'
 
@@ -37,6 +39,8 @@ function App() {
               <Route path="/personalities" element={<PersonalityList />} />
               <Route path="/personalities/:slug" element={<PersonalityDetail />} />
               <Route path="/media-library" element={<MediaLibrary />} />
+              <Route path="/media-library/:id" element={<MediaDetail />} />
+              <Route path="/episodes/:id/media" element={<EpisodeMedia />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>

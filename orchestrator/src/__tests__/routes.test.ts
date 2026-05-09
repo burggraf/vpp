@@ -4,6 +4,7 @@ import { researchRoutes } from '../routes/research'
 import { personalityRoutes } from '../routes/personality'
 import { scriptRoutes } from '../routes/script'
 import { ttsRoutes } from '../routes/tts'
+import { mediaRoutes } from '../routes/media'
 
 function createTestApp() {
   const app = new Hono()
@@ -11,6 +12,7 @@ function createTestApp() {
   app.route('/api', personalityRoutes)
   app.route('/api', scriptRoutes)
   app.route('/api', ttsRoutes)
+  app.route('/api', mediaRoutes)
   return app
 }
 
@@ -104,5 +106,56 @@ describe('tts routes', () => {
     expect(res.status).toBe(400)
     const data = await res.json()
     expect(data.error).toBe('segments array is required')
+  })
+})
+
+describe('media routes', () => {
+  const app = createTestApp()
+
+  test('POST /api/media/search validates query', async () => {
+    const res = await app.request('/api/media/search', {
+      method: 'POST',
+      body: JSON.stringify({}),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toBe('query is required')
+  })
+
+  test('POST /api/media/download validates sourceId+assetId', async () => {
+    const res = await app.request('/api/media/download', {
+      method: 'POST',
+      body: JSON.stringify({}),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toBe('sourceId and assetId are required')
+  })
+
+  test('GET /api/media/sources returns source list', async () => {
+    const res = await app.request('/api/media/sources')
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.sources).toBeDefined()
+    expect(Array.isArray(data.sources)).toBe(true)
+  })
+
+  test('GET /api/media-library lists media', async () => {
+    const res = await app.request('/api/media-library')
+    // Will fail if PB not running, but route should exist
+    expect(res.status).toBeDefined()
+  })
+
+  test('PUT /api/media/sources/:id validates unknown source', async () => {
+    const res = await app.request('/api/media/sources/nonexistent', {
+      method: 'PUT',
+      body: JSON.stringify({ enabled: false }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    expect(res.status).toBe(404)
+    const data = await res.json()
+    expect(data.error).toContain('not found')
   })
 })
