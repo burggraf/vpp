@@ -2,7 +2,7 @@
  * Quality Gate — validates episode compositions before preview/render.
  * Runs lint, asset, and duration checks.
  */
-import { pbGetOne, pbList } from '../pocketbase'
+import { pbGetOne, pbList, pbUpdate } from '../pocketbase'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { access } from 'node:fs/promises'

@@ -142,8 +142,8 @@ export function EpisodeMedia() {
             <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p className="text-lg">No media analysis yet</p>
             <p className="text-sm mt-1">Run analysis to identify needed assets</p>
-          </Card>
-        )
+          </CardContent>
+        </Card>
       ) : (
         <>
           {/* Segment needs */}
