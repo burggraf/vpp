@@ -13,7 +13,8 @@ export function getPb(): PocketBase {
 export async function authAdmin(): Promise<PocketBase> {
   const client = getPb()
   try {
-    await client.admins.authWithPassword(
+    // PB 0.38.0+ uses _superusers collection instead of admins endpoint
+    await client.collection('_superusers').authWithPassword(
       config.PB_ADMIN_EMAIL,
       config.PB_ADMIN_PASSWORD
     )
@@ -46,7 +47,17 @@ export async function pbCreate(
   data: Record<string, unknown>
 ) {
   const pb = await authAdmin()
-  return pb.collection(collection).create(data)
+  try {
+    return await pb.collection(collection).create(data)
+  } catch (err: any) {
+    console.error(`❌ pbCreate ${collection} failed:`, {
+      message: err?.message,
+      status: err?.status,
+      data: err?.response?.data,
+      originalError: err,
+    })
+    throw err
+  }
 }
 
 export async function pbUpdate(

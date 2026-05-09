@@ -135,7 +135,7 @@ export async function generateTTS(episodeId: string, segments: Array<{ text: str
   })
 }
 
-// ─── Episode Generation (SSE) ───────────────────────────────────────────────
+// ─── Episode Generation (Polling) ───────────────────────────────────────────
 
 interface GenerationCallbacks {
   topic: string
@@ -147,13 +147,16 @@ interface GenerationCallbacks {
 }
 
 /**
- * Start episode generation via SSE.
- * Returns the EventSource for cleanup.
+ * Start episode generation and poll for progress.
+ * Returns an abort controller to cancel polling.
  */
 export function startEpisodeGeneration(
   episodeId: string,
   callbacks: GenerationCallbacks,
-): EventSource {
+): AbortController {
+  const abort = new AbortController()
+
+  // Start generation
   const params = new URLSearchParams({
     topic: callbacks.topic,
     channelId: callbacks.channelId,
@@ -161,24 +164,43 @@ export function startEpisodeGeneration(
     ...(callbacks.templateId ? { templateId: callbacks.templateId } : {}),
   })
 
-  const url = `${ORCHESTRATOR_URL}/api/episodes/${episodeId}/generate?${params.toString()}`
-  const es = new EventSource(url)
+  fetch(`${ORCHESTRATOR_URL}/api/episodes/${episodeId}/generate?${params.toString()}`)
+    .then(res => res.json())
+    .then(() => {
+      // Start polling for progress
+      pollProgress(episodeId, callbacks, abort.signal)
+    })
+    .catch(() => {
+      callbacks.onError('Failed to start generation')
+    })
 
-  es.onmessage = (event) => {
+  return abort
+}
+
+function pollProgress(
+  episodeId: string,
+  callbacks: GenerationCallbacks,
+  signal: AbortSignal,
+) {
+  const poll = async () => {
+    if (signal.aborted) return
     try {
-      const data = JSON.parse(event.data)
+      const res = await fetch(`${ORCHESTRATOR_URL}/api/episodes/${episodeId}/progress`, { signal })
+      const data = await res.json()
       callbacks.onProgress(data)
-    } catch {
-      // Ignore parse errors
+
+      if (data.done || data.stage === 'complete' || data.stage === 'failed') {
+        return // Done
+      }
+
+      // Poll again in 1s
+      setTimeout(poll, 1000)
+    } catch (err) {
+      if (signal.aborted) return
+      callbacks.onError('Connection lost during generation')
     }
   }
-
-  es.onerror = () => {
-    es.close()
-    callbacks.onError('Connection lost during generation')
-  }
-
-  return es
+  poll()
 }
 
 // ─── Template Operations ────────────────────────────────────────────────────

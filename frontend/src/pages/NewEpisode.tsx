@@ -74,7 +74,7 @@ export function NewEpisode() {
   const [generating, setGenerating] = useState(false)
   const [episodeId, setEpisodeId] = useState<string | null>(null)
   const [progress, setProgress] = useState<GenerationProgress | null>(null)
-  const eventSourceRef = useRef<EventSource | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (!slug) return
@@ -108,10 +108,10 @@ export function NewEpisode() {
     fetchData()
   }, [slug])
 
-  // Cleanup SSE on unmount
+  // Cleanup polling on unmount
   useEffect(() => {
     return () => {
-      eventSourceRef.current?.close()
+      abortRef.current?.abort()
     }
   }, [])
 
@@ -179,8 +179,8 @@ export function NewEpisode() {
         episode_count: (channel.episode_count || 0) + 1,
       })
 
-      // Start generation via orchestrator (SSE)
-      const es = startEpisodeGeneration(created.id, {
+      // Start generation via orchestrator (polling)
+      const abort = startEpisodeGeneration(created.id, {
         topic: topic.trim(),
         channelId: channel.id,
         options: genOptions,
@@ -200,7 +200,7 @@ export function NewEpisode() {
           setGenerating(false)
         },
       })
-      eventSourceRef.current = es
+      abortRef.current = abort
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to create episode')
       setGenerating(false)

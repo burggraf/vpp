@@ -78,6 +78,10 @@ export function EpisodeWorkspace() {
   const [templateDescription, setTemplateDescription] = useState('')
   const [savingTemplate, setSavingTemplate] = useState(false)
 
+  // Preview state
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewBlock, setPreviewBlock] = useState<Block | null>(null)
+
   const fetchEpisode = async () => {
     if (!id) return
     try {
@@ -281,6 +285,67 @@ export function EpisodeWorkspace() {
         </Card>
       </div>
 
+      {/* Preview Panel */}
+      {previewOpen && previewBlock && (
+        <Card className="border-purple-500/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Play className="h-5 w-5 text-purple-400" />
+              Preview: {previewBlock.block_type} #{previewBlock.order}
+              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => { setPreviewOpen(false); setPreviewBlock(null); }}>Close</Button>
+            </CardTitle>
+            <CardDescription>
+              {previewBlock.composition_src}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Script preview */}
+            {previewBlock.script && (
+              <div className="mb-4 p-3 rounded bg-zinc-900 border border-zinc-800">
+                <Label className="text-xs text-zinc-500 mb-1 block">Script</Label>
+                <p className="text-sm text-zinc-300 whitespace-pre-wrap">{previewBlock.script}</p>
+              </div>
+            )}
+            {/* Composition file info */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-zinc-500">Duration:</span>{' '}
+                <span className="text-zinc-200">{previewBlock.duration || 0}s</span>
+              </div>
+              <div>
+                <span className="text-zinc-500">Status:</span>{' '}
+                <span className="text-zinc-200 capitalize">{previewBlock.status.replace('_', ' ')}</span>
+              </div>
+              <div>
+                <span className="text-zinc-500">Track:</span>{' '}
+                <span className="text-zinc-200">{previewBlock.track_index}</span>
+              </div>
+              <div>
+                <span className="text-zinc-500">Composition:</span>{' '}
+                <span className="text-zinc-200 font-mono text-xs">{previewBlock.composition_src}</span>
+              </div>
+            </div>
+            {previewBlock.assets && previewBlock.assets.length > 0 && (
+              <div className="mt-4">
+                <Label className="text-xs text-zinc-500 mb-1 block">Assets</Label>
+                <div className="flex flex-wrap gap-2">
+                  {previewBlock.assets.map((a, i) => (
+                    <span key={i} className="text-xs bg-zinc-800 text-zinc-300 px-2 py-1 rounded font-mono">{a}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="mt-4 p-3 rounded bg-amber-500/10 border border-amber-500/20">
+              <p className="text-sm text-amber-300">
+                Preview rendering requires the HyperFrames dev server. Run{' '}
+                <code className="bg-amber-500/20 px-1 rounded">npx hyperframes preview</code>{' '}
+                in the episode's composition directory to see the visual preview.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Blocks */}
       <Card>
         <CardHeader>
@@ -289,7 +354,7 @@ export function EpisodeWorkspace() {
             Episode Blocks
           </CardTitle>
           <CardDescription>
-            Click a block to view and edit its details. Drag to reorder.
+            Click a block to view details and preview. Edit inline or open the composition.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -308,10 +373,18 @@ export function EpisodeWorkspace() {
                   key={block.id}
                   block={block}
                   expanded={expandedBlock === block.id}
-                  onToggle={() => setExpandedBlock(expandedBlock === block.id ? null : block.id)}
+                  onToggle={() => {
+                    setExpandedBlock(expandedBlock === block.id ? null : block.id)
+                    setPreviewBlock(block)
+                    setPreviewOpen(expandedBlock !== block.id)
+                  }}
                   onUpdate={(data) => updateBlock(block.id, data)}
                   onDelete={() => deleteBlock(block.id)}
                   onMove={(dir) => moveBlock(block.id, dir)}
+                  onPreview={() => {
+                    setPreviewBlock(block)
+                    setPreviewOpen(true)
+                  }}
                   isFirst={block.order === 1}
                   isLast={block.order === blocks.length}
                 />
