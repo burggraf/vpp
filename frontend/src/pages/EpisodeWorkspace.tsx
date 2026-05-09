@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { pb } from '@/lib/pocketbase'
-import { saveAsTemplate, analyzeEpisodeMedia, generateBlocks, runQualityGate } from '@/lib/orchestrator'
+import { saveAsTemplate, analyzeEpisodeMedia, generateBlocks, runQualityGate, startPreview, stopPreview } from '@/lib/orchestrator'
 import type { Episode, Block } from '@/types'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
+import { PreviewPlayer } from '@/components/PreviewPlayer'
+import { FeedbackPanel } from '@/components/FeedbackPanel'
 import {
   Dialog,
   DialogContent,
@@ -41,6 +43,7 @@ import {
   Shield,
   Clapperboard as ClapperboardIcon,
   Loader2 as Loader2Icon,
+  StopCircle,
 } from 'lucide-react'
 
 const BLOCK_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -83,8 +86,8 @@ export function EpisodeWorkspace() {
   const [savingTemplate, setSavingTemplate] = useState(false)
 
   // Preview state
-  const [previewOpen, setPreviewOpen] = useState(false)
-  const [previewBlock, setPreviewBlock] = useState<Block | null>(null)
+  const [showPreviewPanel, setShowPreviewPanel] = useState(false)
+  const [previewStatus, setPreviewStatus] = useState<'starting' | 'running' | 'stopped' | 'error'>('stopped')
   const [generatingBlocks, setGeneratingBlocks] = useState(false)
   const [runningQuality, setRunningQuality] = useState(false)
   const [qualityReport, setQualityReport] = useState<any>(null)
@@ -123,6 +126,36 @@ export function EpisodeWorkspace() {
     fetchEpisode()
     fetchBlocks()
   }, [id])
+
+  const handleStartPreview = useCallback(async () => {
+    if (!episode) return
+    try {
+      const result = await startPreview(episode.id)
+      setShowPreviewPanel(true)
+      setPreviewStatus('running')
+      await pb.collection('episodes').update(episode.id, { status: 'preview', preview_url: result.url })
+      await fetchEpisode()
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to start preview')
+    }
+  }, [episode, fetchEpisode])
+
+  const handleStopPreview = useCallback(async () => {
+    if (!episode) return
+    try {
+      await stopPreview(episode.id)
+      setShowPreviewPanel(false)
+      setPreviewStatus('stopped')
+    } catch (err: unknown) {
+      console.error('Failed to stop preview:', err)
+    }
+  }, [episode])
+
+  const handlePreviewStatusChange = useCallback((s: 'starting' | 'running' | 'stopped' | 'error') => {
+    setPreviewStatus(s)
+    if (s === 'stopped' || s === 'error') setShowPreviewPanel(false)
+    if (s === 'running') setShowPreviewPanel(true)
+  }, [])
 
   if (loading) {
     return (
@@ -279,6 +312,16 @@ export function EpisodeWorkspace() {
             {runningQuality ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <Shield className="mr-2 h-4 w-4" />}
             Quality Gate
           </Button>
+          {blocks.length > 0 && previewStatus !== 'running' && (
+            <Button variant="default" size="sm" onClick={handleStartPreview}>
+              <Play className="mr-2 h-4 w-4" /> Start Preview
+            </Button>
+          )}
+          {previewStatus === 'running' && (
+            <Button variant="destructive" size="sm" onClick={handleStopPreview}>
+              <StopCircle className="mr-2 h-4 w-4" /> Stop Preview
+            </Button>
+          )}
         </div>
       </div>
 
@@ -288,7 +331,18 @@ export function EpisodeWorkspace() {
           <CardTitle className="text-sm font-medium text-zinc-400">Pipeline</CardTitle>
         </CardHeader>
         <CardContent>
-          <PipelineStepper stages={stages} />
+          <PipelineStepper
+            stages={stages}
+            onStageClick={(stageId) => {
+              const routes: Record<string, string> = {
+                research: `/episodes/${episode.id}/research`,
+                script: `/episodes/${episode.id}/script`,
+                media: `/episodes/${episode.id}/media`,
+              }
+              if (routes[stageId]) navigate(routes[stageId])
+              if (stageId === 'preview' && previewStatus !== 'running') handleStartPreview()
+            }}
+          />
         </CardContent>
       </Card>
 
@@ -332,65 +386,26 @@ export function EpisodeWorkspace() {
         </Card>
       </div>
 
-      {/* Preview Panel */}
-      {previewOpen && previewBlock && (
-        <Card className="border-purple-500/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Play className="h-5 w-5 text-purple-400" />
-              Preview: {previewBlock.block_type} #{previewBlock.order}
-              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => { setPreviewOpen(false); setPreviewBlock(null); }}>Close</Button>
-            </CardTitle>
-            <CardDescription>
-              {previewBlock.composition_src}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Script preview */}
-            {previewBlock.script && (
-              <div className="mb-4 p-3 rounded bg-zinc-900 border border-zinc-800">
-                <Label className="text-xs text-zinc-500 mb-1 block">Script</Label>
-                <p className="text-sm text-zinc-300 whitespace-pre-wrap">{previewBlock.script}</p>
-              </div>
-            )}
-            {/* Composition file info */}
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-zinc-500">Duration:</span>{' '}
-                <span className="text-zinc-200">{previewBlock.duration || 0}s</span>
-              </div>
-              <div>
-                <span className="text-zinc-500">Status:</span>{' '}
-                <span className="text-zinc-200 capitalize">{previewBlock.status.replace('_', ' ')}</span>
-              </div>
-              <div>
-                <span className="text-zinc-500">Track:</span>{' '}
-                <span className="text-zinc-200">{previewBlock.track_index}</span>
-              </div>
-              <div>
-                <span className="text-zinc-500">Composition:</span>{' '}
-                <span className="text-zinc-200 font-mono text-xs">{previewBlock.composition_src}</span>
-              </div>
-            </div>
-            {previewBlock.assets && previewBlock.assets.length > 0 && (
-              <div className="mt-4">
-                <Label className="text-xs text-zinc-500 mb-1 block">Assets</Label>
-                <div className="flex flex-wrap gap-2">
-                  {previewBlock.assets.map((a, i) => (
-                    <span key={i} className="text-xs bg-zinc-800 text-zinc-300 px-2 py-1 rounded font-mono">{a}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="mt-4 p-3 rounded bg-amber-500/10 border border-amber-500/20">
-              <p className="text-sm text-amber-300">
-                Preview rendering requires the HyperFrames dev server. Run{' '}
-                <code className="bg-amber-500/20 px-1 rounded">npx hyperframes preview</code>{' '}
-                in the episode's composition directory to see the visual preview.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Preview + Feedback Panel */}
+      {showPreviewPanel && episode && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4" style={{ minHeight: '500px' }}>
+          {/* Preview Player - 2/3 width */}
+          <div className="lg:col-span-2">
+            <PreviewPlayer
+              episodeId={episode.id}
+              className="h-full min-h-[500px]"
+              onStatusChange={handlePreviewStatusChange}
+            />
+          </div>
+          {/* Feedback Panel - 1/3 width */}
+          <div className="lg:col-span-1 border border-zinc-700/50 rounded-lg overflow-hidden">
+            <FeedbackPanel
+              episodeId={episode.id}
+              blocks={blocks}
+              className="h-full min-h-[500px]"
+            />
+          </div>
+        </div>
       )}
 
       {/* Blocks */}
@@ -422,15 +437,12 @@ export function EpisodeWorkspace() {
                   expanded={expandedBlock === block.id}
                   onToggle={() => {
                     setExpandedBlock(expandedBlock === block.id ? null : block.id)
-                    setPreviewBlock(block)
-                    setPreviewOpen(expandedBlock !== block.id)
                   }}
                   onUpdate={(data) => updateBlock(block.id, data)}
                   onDelete={() => deleteBlock(block.id)}
                   onMove={(dir) => moveBlock(block.id, dir)}
                   onPreview={() => {
-                    setPreviewBlock(block)
-                    setPreviewOpen(true)
+                    if (previewStatus !== 'running') handleStartPreview()
                   }}
                   isFirst={block.order === 1}
                   isLast={block.order === blocks.length}

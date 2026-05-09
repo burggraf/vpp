@@ -12,6 +12,7 @@ interface PipelineStage {
 interface PipelineStepperProps {
   stages: PipelineStage[]
   className?: string
+  onStageClick?: (stageId: string) => void
 }
 
 const stageIcons: Record<string, React.ReactNode> = {
@@ -44,12 +45,15 @@ const labelColors: Record<StageStatus, string> = {
   failed: 'text-red-400 font-medium',
 }
 
-export function PipelineStepper({ stages, className }: PipelineStepperProps) {
+export function PipelineStepper({ stages, className, onStageClick }: PipelineStepperProps) {
   return (
     <div className={cn('flex items-center gap-1 overflow-x-auto py-2', className)}>
       {stages.map((stage, i) => (
         <div key={stage.id} className="flex items-center gap-1 shrink-0">
-          <div className="flex flex-col items-center gap-1.5">
+          <div
+            className={cn('flex flex-col items-center gap-1.5', onStageClick && 'cursor-pointer hover:opacity-80')}
+            onClick={() => onStageClick?.(stage.id)}
+          >
             {stageIcons[stage.status]}
             <span className={cn('text-xs', labelColors[stage.status])}>
               {stage.label}
@@ -69,25 +73,45 @@ export function PipelineStepper({ stages, className }: PipelineStepperProps) {
   )
 }
 
-/** Derive PipelineStepper stages from an episode status string. */
+/** Derive PipelineStepper stages from an episode status string.
+ * Maps to the 8-stage pipeline: Research, Script, TTS, Media, Blocks, Quality Gate, Preview, Render.
+ */
 export function getPipelineStages(episodeStatus: string): PipelineStage[] {
-  const allStages = ['draft', 'generating', 'preview', 'reviewing', 'rendering', 'complete', 'failed']
-  const status = episodeStatus as string
-  const currentIndex = allStages.indexOf(status)
+  const allStages = [
+    { id: 'research', label: 'Research' },
+    { id: 'script', label: 'Script' },
+    { id: 'tts', label: 'TTS' },
+    { id: 'media', label: 'Media' },
+    { id: 'blocks', label: 'Blocks' },
+    { id: 'quality', label: 'Quality Gate' },
+    { id: 'preview', label: 'Preview' },
+    { id: 'render', label: 'Render' },
+  ]
 
-  if (currentIndex === -1) {
-    return allStages.map((id) => ({ id, label: id.charAt(0).toUpperCase() + id.slice(1), status: 'pending' as StageStatus }))
+  // Map episode status to stage index
+  const statusToStage: Record<string, number> = {
+    draft: 0,
+    generating: 1,  // research/script/tts/media/blocks all during generation
+    preview: 6,
+    reviewing: 6,
+    rendering: 7,
+    complete: 7,
+    failed: -1,
   }
 
-  return allStages.map((id, i) => {
+  const currentIdx = statusToStage[episodeStatus] ?? 0
+
+  return allStages.map((stage, i) => {
     let s: StageStatus
-    if (id === status) {
-      s = status === 'failed' ? 'failed' : 'active'
-    } else if (i < currentIndex) {
+    if (currentIdx === -1) {
+      s = i < 7 ? 'complete' : 'failed'
+    } else if (i === currentIdx) {
+      s = 'active'
+    } else if (i < currentIdx) {
       s = 'complete'
     } else {
       s = 'pending'
     }
-    return { id, label: id.charAt(0).toUpperCase() + id.slice(1), status: s }
+    return { id: stage.id, label: stage.label, status: s }
   })
 }

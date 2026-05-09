@@ -17,6 +17,8 @@ import { mediaAnalysisRoutes } from './routes/media-analysis'
 import { blockRoutes } from './routes/blocks'
 import { qualityRoutes } from './routes/quality'
 import { queueRoutes } from './routes/queue'
+import { previewRoutes } from './routes/preview'
+import { feedbackRoutes } from './routes/feedback'
 import { mediaRegistry, UnsplashSource, PexelsSource, PixabaySource, ScreenCaptureSource } from './media'
 
 const app = new Hono()
@@ -62,6 +64,8 @@ app.route('/api', mediaAnalysisRoutes)
 app.route('/api', blockRoutes)
 app.route('/api', qualityRoutes)
 app.route('/api', queueRoutes)
+app.route('/api', previewRoutes)
+app.route('/api', feedbackRoutes)
 
 app.onError((err, c) => {
   console.error('❌ Unhandled error:', err)

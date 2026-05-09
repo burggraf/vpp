@@ -225,6 +225,11 @@ export async function deleteTemplate(templateId: string) {
   })
 }
 
+export async function listTemplates(channelId?: string) {
+  const path = channelId ? `/api/templates/channel/${channelId}` : '/api/templates'
+  return orchestratorFetch(path)
+}
+
 // Media Library API
 export async function searchMedia(query: string, options?: { type?: string; limit?: number; sourceId?: string }) {
   return orchestratorFetch('/api/media/search', {
@@ -291,4 +296,35 @@ export async function getQualityGateReport(episodeId: string) {
 // Queue
 export async function getQueueStatus() {
   return orchestratorFetch('/api/queue')
+}
+
+// --- Preview ---
+
+export async function startPreview(episodeId: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/preview/start`, {
+    method: 'POST',
+  })
+}
+
+export async function stopPreview(episodeId: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/preview`, {
+    method: 'DELETE',
+  })
+}
+
+export async function getPreviewStatus() {
+  return orchestratorFetch('/api/preview/status')
+}
+
+// --- Feedback ---
+
+export async function submitFeedback(episodeId: string, message: string, targetBlockId?: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify({ message, targetBlockId }),
+  })
+}
+
+export async function getFeedbackLog(episodeId: string) {
+  return orchestratorFetch(`/api/episodes/${episodeId}/feedback`)
 }

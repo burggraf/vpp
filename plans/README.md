@@ -15,7 +15,7 @@
 | [Phase 1](phase-1-foundation.md) | Foundation | DB, frontend scaffold, CRUD, auth, R2 | 3-5 days | 🟡 Done (R2 + GitHub push need manual setup) |
 | [Phase 2](phase-2-research-personality-tts.md) | Research + Personality + TTS | Web research, voice training, script gen, TTS | 5-7 days | 🟢 Complete |
 | [Phase 3](phase-3-media-blocks-quality.md) | Media + Blocks + Quality | Asset sourcing, composition gen, lint gate | 6-8 days | 🟢 Complete |
-| [Phase 4](phase-4-preview-feedback-templates.md) | Preview + Feedback + Templates | Live preview, chat feedback, save/load templates | 4-6 days | ⬜ Not started |
+| [Phase 4](phase-4-preview-feedback-templates.md) | Preview + Feedback + Templates | Live preview, chat feedback, save/load templates | 4-6 days | 🟢 Complete |
 | [Phase 5](phase-5-render-storage-schedule.md) | Render + Storage + Schedule | MP4 render, R2 upload, CRON automation | 4-5 days | ⬜ Not started |
 | [Phase 6](phase-6-polish.md) | Polish | Dashboard, real-time, errors, deploy, docs | 3-4 days | ⬜ Not started |
 | [Phase 7](phase-7-social-distribution.md) | Social Distribution | YouTube upload, thumbnails, analytics (future) | 8-12 days | ⬜ Not started |
