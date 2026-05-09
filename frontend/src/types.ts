@@ -221,6 +221,30 @@ export interface AuthUser {
 }
 
 // API response envelope
+/** Generation options for the Episode Blueprint. */
+export interface GenerationOptions {
+  research: boolean
+  script: boolean
+  tts: boolean
+  visuals: boolean
+  backgroundMusic: boolean
+  intro: boolean
+  outro: boolean
+  personalityId?: string
+  targetDuration?: number
+}
+
+/** Progress event streamed during episode generation. */
+export interface GenerationProgress {
+  episodeId: string
+  stage: 'research' | 'script' | 'tts' | 'media' | 'blocks' | 'quality' | 'complete' | 'failed'
+  stageLabel: string
+  progress: number          // 0-100 within current stage
+  message: string
+  overallProgress: number   // 0-100 across entire pipeline
+  error?: string
+}
+
 export interface PocketBaseResponse<T> {
   page: number
   perPage: number

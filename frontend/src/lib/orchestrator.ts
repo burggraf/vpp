@@ -134,3 +134,71 @@ export async function generateTTS(episodeId: string, segments: Array<{ text: str
     body: JSON.stringify({ segments, voice, speed }),
   })
 }
+
+// ─── Episode Generation (SSE) ───────────────────────────────────────────────
+
+interface GenerationCallbacks {
+  topic: string
+  channelId: string
+  options: Record<string, unknown>
+  templateId?: string
+  onProgress: (progress: { stage: string; stageLabel: string; progress: number; message: string; overallProgress: number; error?: string }) => void
+  onError: (error: string) => void
+}
+
+/**
+ * Start episode generation via SSE.
+ * Returns the EventSource for cleanup.
+ */
+export function startEpisodeGeneration(
+  episodeId: string,
+  callbacks: GenerationCallbacks,
+): EventSource {
+  const params = new URLSearchParams({
+    topic: callbacks.topic,
+    channelId: callbacks.channelId,
+    options: JSON.stringify(callbacks.options),
+    ...(callbacks.templateId ? { templateId: callbacks.templateId } : {}),
+  })
+
+  const url = `${ORCHESTRATOR_URL}/api/episodes/${episodeId}/generate?${params.toString()}`
+  const es = new EventSource(url)
+
+  es.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+      callbacks.onProgress(data)
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  es.onerror = () => {
+    es.close()
+    callbacks.onError('Connection lost during generation')
+  }
+
+  return es
+}
+
+// ─── Template Operations ────────────────────────────────────────────────────
+
+export async function saveAsTemplate(episodeId: string, name: string, description?: string) {
+  return orchestratorFetch(`/api/templates/save`, {
+    method: 'POST',
+    body: JSON.stringify({ episodeId, name, description }),
+  })
+}
+
+export async function createEpisodeFromTemplate(templateId: string, topic: string, title?: string) {
+  return orchestratorFetch(`/api/templates/${templateId}/use`, {
+    method: 'POST',
+    body: JSON.stringify({ topic, title }),
+  })
+}
+
+export async function deleteTemplate(templateId: string) {
+  return orchestratorFetch(`/api/templates/${templateId}`, {
+    method: 'DELETE',
+  })
+}

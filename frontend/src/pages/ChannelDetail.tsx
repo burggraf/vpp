@@ -51,13 +51,11 @@ export function ChannelDetail() {
     if (!slug) return
     try {
       setLoading(true)
-      const [chResult, epResult] = await Promise.all([
-        pb.collection('channels').getFirstListItem<Channel>(`slug="${slug}"`),
-        pb.collection('episodes').getList<Episode>(1, 50, {
-          filter: `channel="${slug}"`,
-          sort: 'number',
-        }),
-      ])
+      const chResult = await pb.collection('channels').getFirstListItem<Channel>(`slug="${slug}"`)
+      const epResult = await pb.collection('episodes').getList<Episode>(1, 50, {
+        filter: `channel="${chResult.id}"`,
+        sort: '-created',
+      })
       setChannel(chResult)
       setEpisodes(epResult.items)
       setError(null)

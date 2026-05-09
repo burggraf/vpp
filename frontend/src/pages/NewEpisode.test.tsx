@@ -1,4 +1,14 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+// Polyfill ResizeObserver before any imports
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  class ResizeObserverMock {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+  ;(globalThis as any).ResizeObserver = ResizeObserverMock
+}
+
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { NewEpisode } from '@/pages/NewEpisode'
@@ -8,6 +18,10 @@ vi.mock('@/lib/pocketbase', () => ({
   pb: {
     collection: vi.fn(),
   },
+}))
+
+vi.mock('@/lib/orchestrator', () => ({
+  startEpisodeGeneration: vi.fn(() => ({ close: vi.fn() })),
 }))
 
 const mockChannel = {
@@ -31,6 +45,13 @@ const mockTemplates = [
   },
 ]
 
+const makeColl = (templates: any[] = []) => ({
+  getFirstListItem: vi.fn().mockResolvedValue(mockChannel),
+  getList: vi.fn().mockResolvedValue({ items: templates, page: 1, perPage: 50, totalPages: 1, totalItems: templates.length }),
+  create: vi.fn().mockResolvedValue({ id: 'ep_new' }),
+  update: vi.fn().mockResolvedValue({}),
+})
+
 const renderPage = (initialEntries = ['/channels/dev-channel/new']) => {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
@@ -41,86 +62,122 @@ const renderPage = (initialEntries = ['/channels/dev-channel/new']) => {
   )
 }
 
-describe('NewEpisode', () => {
-  afterEach(() => { vi.clearAllMocks() })
+describe('NewEpisode Blueprint', () => {
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('loads channel and templates', async () => {
-    const coll = {
-      getFirstListItem: vi.fn().mockResolvedValue(mockChannel),
-      getList: vi.fn().mockResolvedValue({ items: mockTemplates, page: 1, perPage: 50, totalPages: 1, totalItems: 1 }),
-      create: vi.fn().mockResolvedValue({ id: 'ep_new' }),
-      update: vi.fn().mockResolvedValue({}),
-    }
-    vi.mocked(pb.collection).mockReturnValue(coll as any)
+    vi.mocked(pb.collection).mockReturnValue(makeColl(mockTemplates) as any)
 
     renderPage()
 
-    await waitFor(() => screen.getByText('New Episode'), { timeout: 3000 })
+    await waitFor(() => screen.getByText('Episode Blueprint'), { timeout: 3000 })
     expect(screen.getByText('Channel: Dev Channel')).toBeTruthy()
-    expect(screen.getByText('Regular Episode')).toBeTruthy()
+    // Template name appears in the template selector card
+    expect(screen.getAllByText('Regular Episode').length).toBeGreaterThan(0)
   })
 
-  it('disables submit until title entered', async () => {
-    const coll = {
-      getFirstListItem: vi.fn().mockResolvedValue(mockChannel),
-      getList: vi.fn().mockResolvedValue({ items: [], page: 1, perPage: 50, totalPages: 1, totalItems: 0 }),
-      create: vi.fn().mockResolvedValue({ id: 'ep_new' }),
-      update: vi.fn().mockResolvedValue({}),
-    }
+  it('shows all generation sections', async () => {
+    vi.mocked(pb.collection).mockReturnValue(makeColl([]) as any)
+
+    renderPage()
+    await waitFor(() => screen.getByText('Episode Blueprint'), { timeout: 3000 })
+
+    expect(screen.getByText('Research')).toBeTruthy()
+    expect(screen.getByText('Script')).toBeTruthy()
+    expect(screen.getByText('TTS / Narration')).toBeTruthy()
+    expect(screen.getByText('Visuals / Compositions')).toBeTruthy()
+    expect(screen.getByText('Background Music')).toBeTruthy()
+    expect(screen.getByText('Intro')).toBeTruthy()
+    expect(screen.getByText('Outro')).toBeTruthy()
+  })
+
+  it('disables generate until topic entered', async () => {
+    vi.mocked(pb.collection).mockReturnValue(makeColl([]) as any)
+
+    renderPage()
+    await waitFor(() => screen.getByText('Episode Blueprint'), { timeout: 3000 })
+
+    const btn = screen.getByRole('button', { name: /generate episode/i }) as HTMLButtonElement
+    expect(btn.disabled).toBe(true)
+
+    fireEvent.change(screen.getByLabelText(/topic \/ prompt/i), { target: { value: 'AI news this week' } })
+    await waitFor(() => {
+      expect((screen.getByRole('button', { name: /generate episode/i }) as HTMLButtonElement).disabled).toBe(false)
+    })
+  })
+
+  it('creates episode with generating status on submit', async () => {
+    const coll = makeColl([])
     vi.mocked(pb.collection).mockReturnValue(coll as any)
 
     renderPage()
-    await waitFor(() => screen.getByText('New Episode'), { timeout: 3000 })
+    await waitFor(() => screen.getByText('Episode Blueprint'), { timeout: 3000 })
 
-    expect((screen.getByRole('button', { name: /create episode/i }) as HTMLButtonElement).disabled).toBe(true)
-    fireEvent.change(screen.getByLabelText('Title *'), { target: { value: 'Test' } })
-    await waitFor(() => expect((screen.getByRole('button', { name: /create episode/i }) as HTMLButtonElement).disabled).toBe(false))
-  })
-
-  it('creates episode on submit', async () => {
-    const coll = {
-      getFirstListItem: vi.fn().mockResolvedValue(mockChannel),
-      getList: vi.fn().mockResolvedValue({ items: [], page: 1, perPage: 50, totalPages: 1, totalItems: 0 }),
-      create: vi.fn().mockResolvedValue({ id: 'ep_new' }),
-      update: vi.fn().mockResolvedValue({}),
-    }
-    vi.mocked(pb.collection).mockReturnValue(coll as any)
-
-    renderPage()
-    await waitFor(() => screen.getByText('New Episode'), { timeout: 3000 })
-
-    fireEvent.change(screen.getByLabelText('Title *'), { target: { value: 'My Episode' } })
-    fireEvent.change(screen.getByLabelText('Topic / Prompt'), { target: { value: 'AI news' } })
-    fireEvent.change(screen.getByLabelText('Episode Number'), { target: { value: '42' } })
-    fireEvent.click(screen.getByRole('button', { name: /create episode/i }))
+    fireEvent.change(screen.getByLabelText(/topic \/ prompt/i), { target: { value: 'AI news this week' } })
+    fireEvent.click(screen.getByRole('button', { name: /generate episode/i }))
 
     await waitFor(() => {
-      expect(coll.create).toHaveBeenCalledWith({
-        channel: 'ch1', title: 'My Episode', slug: 'my-episode',
-        topic: 'AI news', status: 'draft', feedback_log: [], metadata: {}, number: 42,
-      })
+      expect(coll.create).toHaveBeenCalledWith(expect.objectContaining({
+        channel: 'ch1',
+        topic: 'AI news this week',
+        status: 'generating',
+      }))
+    })
+  })
+
+  it('auto-generates title from topic when title is blank', async () => {
+    const coll = makeColl([])
+    vi.mocked(pb.collection).mockReturnValue(coll as any)
+
+    renderPage()
+    await waitFor(() => screen.getByText('Episode Blueprint'), { timeout: 3000 })
+
+    fireEvent.change(screen.getByLabelText(/topic \/ prompt/i), { target: { value: 'AI news this week' } })
+    fireEvent.click(screen.getByRole('button', { name: /generate episode/i }))
+
+    await waitFor(() => {
+      const callArgs = coll.create.mock.calls[0][0]
+      expect(callArgs.title).toBe('AI news this week')
+      expect(callArgs.slug).toBe('ai-news-this-week')
     })
   })
 
   it('includes template when selected', async () => {
-    const coll = {
-      getFirstListItem: vi.fn().mockResolvedValue(mockChannel),
-      getList: vi.fn().mockResolvedValue({ items: mockTemplates, page: 1, perPage: 50, totalPages: 1, totalItems: 1 }),
-      create: vi.fn().mockResolvedValue({ id: 'ep_new' }),
-      update: vi.fn().mockResolvedValue({}),
-    }
+    const coll = makeColl(mockTemplates)
     vi.mocked(pb.collection).mockReturnValue(coll as any)
 
     renderPage()
-    await waitFor(() => screen.getByText('New Episode'), { timeout: 3000 })
+    await waitFor(() => screen.getByText('Episode Blueprint'), { timeout: 3000 })
 
-    fireEvent.click(screen.getByText('Regular Episode'))
-    fireEvent.change(screen.getByLabelText('Title *'), { target: { value: 'T' } })
-    fireEvent.click(screen.getByRole('button', { name: /create episode/i }))
+    // Find and click the template card (button with template name)
+    const allTexts = screen.getAllByText('Regular Episode')
+    fireEvent.click(allTexts[allTexts.length - 1])
+
+    // Enter topic
+    fireEvent.change(screen.getByLabelText(/topic \/ prompt/i), { target: { value: 'T' } })
+    fireEvent.click(screen.getByRole('button', { name: /generate episode/i }))
 
     await waitFor(() => {
       expect(coll.create).toHaveBeenCalled()
-      expect(coll.create.mock.calls[0][0].template).toBe('tpl1')
+      const callArgs = coll.create.mock.calls[0][0]
+      expect(callArgs.template).toBe('tpl1')
     })
+  })
+
+  it('toggles sections via checkboxes', async () => {
+    vi.mocked(pb.collection).mockReturnValue(makeColl([]) as any)
+
+    renderPage()
+    await waitFor(() => screen.getByText('Episode Blueprint'), { timeout: 3000 })
+
+    // All sections should be visible
+    expect(screen.getByText('Research')).toBeTruthy()
+    expect(screen.getByText('TTS / Narration')).toBeTruthy()
+
+    // Click "None" to deselect all
+    fireEvent.click(screen.getByText('None'))
+
+    // Sections should still be visible (just unchecked)
+    expect(screen.getByText('Research')).toBeTruthy()
   })
 })

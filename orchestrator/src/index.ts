@@ -10,6 +10,8 @@ import { researchRoutes } from './routes/research'
 import { personalityRoutes } from './routes/personality'
 import { scriptRoutes } from './routes/script'
 import { ttsRoutes } from './routes/tts'
+import { episodeRoutes } from './routes/episode'
+import { templateRoutes } from './routes/templates'
 
 const app = new Hono()
 
@@ -51,6 +53,8 @@ app.route('/api', researchRoutes)
 app.route('/api', personalityRoutes)
 app.route('/api', scriptRoutes)
 app.route('/api', ttsRoutes)
+app.route('/api', episodeRoutes)
+app.route('/api', templateRoutes)
 
 // Error handler
 app.onError((err, c) => {

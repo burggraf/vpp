@@ -150,3 +150,65 @@ export function listSessions() {
     context,
   }))
 }
+
+/**
+ * Create a base pi session — no special system prompt, default tools.
+ * Used for ad-hoc generation tasks.
+ */
+export async function createBaseAgentSession(): Promise<AgentSession> {
+  return createBaseSession()
+}
+
+/**
+ * Collect response from a session with optional progress callback.
+ * The callback receives the accumulated text at intervals.
+ */
+export function collectResponseWithEvents(
+  session: AgentSession,
+  prompt: string,
+  onProgress?: (text: string) => void,
+  timeoutMs = 300_000,
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let fullText = ''
+    let completed = false
+    let lastProgressCall = 0
+
+    session.prompt(prompt).catch((err) => {
+      if (!completed) {
+        completed = true
+        unsubscribe()
+        reject(err)
+      }
+    })
+
+    const unsubscribe = session.subscribe((event: AgentSessionEvent) => {
+      if (event.type === 'message_update' && event.assistantMessageEvent.type === 'text_delta') {
+        fullText += event.assistantMessageEvent.delta
+
+        // Throttle progress callbacks to ~every 200ms
+        const now = Date.now()
+        if (onProgress && now - lastProgressCall > 200) {
+          lastProgressCall = now
+          onProgress(fullText)
+        }
+      }
+
+      if (event.type === 'agent_end') {
+        if (!completed) {
+          completed = true
+          unsubscribe()
+          resolve(fullText)
+        }
+      }
+    })
+
+    setTimeout(() => {
+      if (!completed) {
+        completed = true
+        unsubscribe()
+        reject(new Error(`Session timed out after ${timeoutMs / 1000}s`))
+      }
+    }, timeoutMs)
+  })
+}
